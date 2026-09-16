@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+build/
+.next/
+coverage/
+.DS_Store
+*.log
+.coldproof/
+tsconfig.tsbuildinfo
