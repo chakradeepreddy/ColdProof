@@ -24,6 +24,8 @@ Completed
 - **[Phase 4 Correction]** Hardened the PATH shim by dynamically resolving the absolute path of real binaries on the host, preventing recursion and fragile bash path replacements.
 - **[Phase 4 Correction]** Added explicit logging for the duplicate MVP instrumentation pass.
 - **[Phase 4]** Added `coldproof investigate <command>` entry point to CLI to chain Execution -> Comparison -> Detection.
+- **[Phase 5 Correction]** Hardened `matchFailureSignatures` into `analyzeFailureSignatures` to evaluate both exit code and textual similarity of the failure. Strips absolute paths and ColdProof block messages during output normalization to enable robust matching without complex AI diffs.
+- **[Phase 5 Correction]** Downgraded perturbation evidence logic to be highly conservative. An exit code match where outputs differ is now classified as `STRONG_EVIDENCE`, leaving `CONFIRMED` only for identical failure footprints.
 - **[Phase 5]** Defined `PerturbationResult` and `PerturbationEvidence` structures in `types.ts` for structured causal evaluation.
 - **[Phase 5]** Extended `executeCommand` to support optional execution environment overrides.
 - **[Phase 5]** Implemented the core Perturbation Engine in `perturb.ts` for executable candidates. It safely generates an isolated bash shim to block access (returns exit code 127) while leaving the system `PATH` and binaries untouched.
@@ -52,6 +54,7 @@ Completed
 - **[Phase 3]** Kept the comparison engine deterministic and pure. It defines success strictly via `exitCode === 0`. Outputs are retained as evidence in the signature but don't factor into the pass/fail behavior check. Does not attempt candidate detection or causation yet.
 - **[Phase 4]** The Candidate Detector runs *after* comparison, and only if behavior diverged. It uses lightweight bash shims inserted into `PATH` to intercept and log invocations of standard developer binaries. Environment variables are checked only for presence using a strict MVP allowlist, ignoring noisy IDE/system flags and completely omitting values to ensure zero leak of secrets. Clean probes are run against the exact same `/workspace` snapshot as the clean execution runner.
 - **[Phase 5]** The Perturbation Engine implements intervention-based evidence for executable candidates. Rather than simply observing differences (correlation), it manipulates the warm environment (hiding the executable via an isolated PATH shim) and evaluates whether that intervention reproduces the clean environment's failure signature. It strictly categorizes evidence based on this experiment rather than guessing causality.
+- **[Phase 5 Correction]** The signature matcher now conservatively checks both exit codes and normalized stderr for failure similarity. Comparing solely by exit code is insufficient because an intervention (like a block shim) throwing `127` is different than an OS-level `127` missing executable. If outputs don't match, the engine correctly yields `STRONG_EVIDENCE` instead of `CONFIRMED`.
 
 ## Dependencies
 - `commander` (CLI arguments)

@@ -208,12 +208,17 @@ program
           console.log(`   ${perturbationResult.evidence.candidateObserved ? '✓' : '✗'} ${targetCandidate.name} was observed during warm execution`);
           console.log(`   ${perturbationResult.evidence.candidatePerturbed ? '✓' : '✗'} ${targetCandidate.name} was blocked in warm execution`);
           console.log(`   ${perturbationResult.evidence.perturbedFailed ? '✓' : '✗'} perturbed execution failed`);
-          console.log(`   ${perturbationResult.evidence.failureSignatureMatched ? '✓' : '✗'} failure signature matched the clean failure\n`);
+          console.log(`   ${perturbationResult.evidence.sameExitCode ? '✓' : '✗'} same exit code boundary as clean failure`);
+          console.log(`   ${perturbationResult.evidence.failureOutputComparable ? '✓' : '✗'} textual failure signature matched\n`);
 
           console.log(chalk.gray('7. Conclusion\n'));
           if (perturbationResult.evidence.classification === 'CONFIRMED' || perturbationResult.evidence.classification === 'STRONG_EVIDENCE') {
              console.log(`   ${chalk.cyan(targetCandidate.name)} is supported as the environmental cause`);
              console.log('   of the observed warm/clean behavioral divergence.');
+             if (perturbationResult.evidence.classification === 'STRONG_EVIDENCE') {
+                console.log(`\n   ${chalk.yellow('Note:')} The exit codes match but the failure text differs.`);
+                console.log(`   ColdProof classifies this as STRONG_EVIDENCE rather than CONFIRMED.`);
+             }
           } else {
              console.log(`   ${chalk.cyan(targetCandidate.name)} is ${chalk.yellow('not supported')} as the environmental cause.`);
           }

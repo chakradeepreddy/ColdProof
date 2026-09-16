@@ -10,16 +10,37 @@ import type {
 } from '../types.js';
 import { executeCommand } from './execute.js';
 
-function matchFailureSignatures(clean: ExecutionResult, perturbed: ExecutionResult): boolean {
-  // If either succeeded, it's not a failure signature match
-  if (clean.exitCode === 0 || perturbed.exitCode === 0) return false;
+export function normalizeOutput(text: string): string {
+  // Strip absolute temporary paths, e.g., /tmp/coldproof-block-XYZ/ or /var/folders/...
+  let normalized = text.replace(/(?:\/tmp|\/var\/folders)[a-zA-Z0-9_/-]+/g, '<TEMP_PATH>');
+  
+  // Strip ColdProof's own block message to ensure we don't accidentally match it 
+  // as if it was a genuine missing executable error from the system.
+  normalized = normalized.replace(/coldproof: executable '.*?' blocked by perturbation\n?/g, '');
 
-  // Compare exit codes
-  if (clean.exitCode === perturbed.exitCode) {
-    return true;
+  return normalized.trim();
+}
+
+export function analyzeFailureSignatures(clean: ExecutionResult, perturbed: ExecutionResult): { sameExitCode: boolean, failureOutputComparable: boolean } {
+  // If either succeeded, it's not a failure signature match
+  if (clean.exitCode === 0 || perturbed.exitCode === 0) {
+    return { sameExitCode: false, failureOutputComparable: false };
   }
 
-  return false;
+  const sameExitCode = clean.exitCode === perturbed.exitCode;
+  
+  // Normalize output
+  const cleanStderr = normalizeOutput(clean.stderr);
+  const perturbedStderr = normalizeOutput(perturbed.stderr);
+
+  // Consider them comparable if they have identical normalized stderr output,
+  // or if one is completely contained within the other (to account for minor wrapping differences).
+  // Empty outputs are only comparable if both are empty.
+  const failureOutputComparable = cleanStderr === perturbedStderr || 
+    (cleanStderr.length > 0 && perturbedStderr.includes(cleanStderr)) ||
+    (perturbedStderr.length > 0 && cleanStderr.includes(perturbedStderr));
+
+  return { sameExitCode, failureOutputComparable };
 }
 
 export async function perturbCandidate(
@@ -40,7 +61,8 @@ export async function perturbCandidate(
       candidatePerturbed: false,
       cleanFailed: clean.exitCode !== 0,
       perturbedFailed: false,
-      failureSignatureMatched: false,
+      sameExitCode: false,
+      failureOutputComparable: false,
       explanation: 'Candidate type not supported for perturbation.',
     },
   };
@@ -71,7 +93,7 @@ exit 127
 
     const perturbedFailed = perturbedWarm.exitCode !== 0;
     const cleanFailed = clean.exitCode !== 0;
-    const failureSignatureMatched = matchFailureSignatures(clean, perturbedWarm);
+    const { sameExitCode, failureOutputComparable } = analyzeFailureSignatures(clean, perturbedWarm);
 
     let classification: PerturbationEvidence['classification'] = 'UNABLE_TO_TEST';
     let explanation = '';
@@ -82,13 +104,15 @@ exit 127
     } else if (!perturbedFailed) {
       classification = 'NOT_IMPLICATED';
       explanation = 'Perturbed environment succeeded, meaning this candidate is not the cause of the failure.';
-    } else if (failureSignatureMatched) {
-      // Both failed and signatures matched (exit code 127 for missing executable)
+    } else if (sameExitCode && failureOutputComparable) {
+      classification = 'CONFIRMED';
+      explanation = 'Perturbation successfully reproduced both the exit code and failure output of the clean environment.';
+    } else if (sameExitCode) {
       classification = 'STRONG_EVIDENCE';
-      explanation = 'Perturbation successfully reproduced the failure signature of the clean environment.';
+      explanation = 'Blocking the candidate reproduced a failure with the same exit boundary as the clean run, but the failure text differs.';
     } else {
       classification = 'NOT_IMPLICATED';
-      explanation = 'Perturbed environment failed, but the failure signature did not match the clean environment.';
+      explanation = 'Perturbed environment failed, but the exit code did not match the clean environment.';
     }
 
     return {
@@ -102,7 +126,8 @@ exit 127
         candidatePerturbed: true,
         cleanFailed,
         perturbedFailed,
-        failureSignatureMatched,
+        sameExitCode,
+        failureOutputComparable,
         explanation,
       },
     };

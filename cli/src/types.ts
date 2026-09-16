@@ -54,7 +54,8 @@ export interface PerturbationEvidence {
   candidatePerturbed: boolean;
   cleanFailed: boolean;
   perturbedFailed: boolean;
-  failureSignatureMatched: boolean;
+  sameExitCode: boolean;
+  failureOutputComparable: boolean;
   explanation: string;
 }
 
