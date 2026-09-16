@@ -32,3 +32,18 @@ export interface ComparisonResult {
   classification: ComparisonClassification;
   failureSignature?: EnvironmentalFailureSignature;
 }
+
+export type CandidateType =
+  | 'EXECUTABLE'
+  | 'RUNTIME_VERSION'
+  | 'ENVIRONMENT_VARIABLE';
+
+export interface EnvironmentCandidate {
+  id: string; // e.g. "EXECUTABLE:jq"
+  type: CandidateType;
+  name: string;
+  warmValue?: string | boolean;
+  cleanValue?: string | boolean;
+  observed?: boolean;
+  reason: string;
+}

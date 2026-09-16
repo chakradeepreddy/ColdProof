@@ -5,6 +5,8 @@ import ora from 'ora';
 import { executeCommand } from './engine/execute.js';
 import { executeCleanCommand } from './engine/executeClean.js';
 import { compareExecutions } from './engine/compare.js';
+import { detectCandidates } from './engine/candidates.js';
+
 
 const program = new Command();
 
@@ -99,6 +101,84 @@ program
       console.log(comparison.failureSignature.warmStderr || '(empty)');
       console.log(chalk.gray('--- CLEAN STDERR ---'));
       console.log(comparison.failureSignature.cleanStderr || '(empty)');
+    }
+  });
+
+program
+  .command('investigate')
+  .description('Compare environments and identify environmental candidates causing divergence')
+  .argument('<command>', 'The command to run')
+  .action(async (command: string) => {
+    console.log(chalk.bold('ColdProof Investigation\n'));
+
+    console.log(chalk.gray('1. Warm execution'));
+    let warmResult;
+    try {
+      warmResult = await executeCommand(command);
+      const icon = warmResult.exitCode === 0 ? chalk.green('✓ PASS') : chalk.red('✗ FAIL');
+      console.log(`   ${icon}`);
+    } catch (err: any) {
+      console.log(`   ${chalk.red('✗ CRASHED')} (${err.message})`);
+      process.exit(1);
+    }
+
+    console.log(chalk.gray('\n2. Clean execution'));
+    let cleanResult;
+    try {
+      cleanResult = await executeCleanCommand(command, process.cwd());
+      const icon = cleanResult.exitCode === 0 ? chalk.green('✓ PASS') : chalk.red('✗ FAIL');
+      console.log(`   ${icon}`);
+    } catch (err: any) {
+      console.log(`   ${chalk.red('✗ CRASHED')} (${err.message})`);
+      process.exit(1);
+    }
+
+    const comparison = compareExecutions(warmResult, cleanResult);
+    console.log(chalk.gray('\n3. Behavioral comparison'));
+    
+    if (comparison.behaviorChanged) {
+      console.log(`   ${chalk.yellow('⚠ ' + comparison.classification)}`);
+    } else {
+      console.log(`   ${chalk.green('✓ ' + comparison.classification)}`);
+    }
+
+    if (comparison.classification === 'WARM_PASS_CLEAN_FAIL') {
+      console.log(chalk.gray('\n4. Environment candidates\n'));
+      const spinner = ora('Detecting candidates...').start();
+      const candidates = await detectCandidates(command, process.cwd());
+      spinner.stop();
+
+      if (candidates.length === 0) {
+        console.log('   No candidates found.');
+      } else {
+        const byType = candidates.reduce((acc, c) => {
+          if (!acc[c.type]) acc[c.type] = [];
+          acc[c.type].push(c);
+          return acc;
+        }, {} as Record<string, typeof candidates>);
+
+        for (const [type, group] of Object.entries(byType)) {
+          console.log(`   ${chalk.bold(type)}`);
+          for (const c of group) {
+            console.log(`   ${chalk.cyan(c.name)}`);
+            if (c.type === 'EXECUTABLE') {
+              console.log(`   Warm: ${c.warmValue ? 'available' : 'unavailable'} ${c.observed ? '+ invoked' : ''}`);
+              console.log(`   Clean: ${c.cleanValue ? 'available' : 'unavailable'}`);
+            } else {
+              console.log(`   Warm: ${c.warmValue}`);
+              console.log(`   Clean: ${c.cleanValue}`);
+            }
+            console.log();
+          }
+        }
+      }
+
+      console.log(chalk.gray('5. Status\n'));
+      console.log('   Causality not established.');
+      console.log('   Controlled perturbation required.');
+    } else {
+      console.log(chalk.gray('\n4. Environment candidates\n'));
+      console.log('   No behavioral failure to investigate.');
     }
   });
 

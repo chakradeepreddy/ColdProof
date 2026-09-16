@@ -1,7 +1,7 @@
 # ColdProof Progress
 
 ## Current Phase
-Phase 3 — Comparison Engine
+Phase 4 — Candidate Detection
 
 ## Status
 Completed
@@ -17,8 +17,13 @@ Completed
 - **[Phase 2]** Added `--clean` flag to `coldproof run`.
 - **[Phase 2]** Verified containerized execution and `node_modules` masking via anonymous volumes.
 - **[Phase 3]** Added `ComparisonResult`, `ComparisonClassification`, and `EnvironmentalFailureSignature` types.
-- **[Phase 3]** Implemented deterministic `compareExecutions` comparing success based on exit codes.
-- **[Phase 3]** Added `coldproof compare <command>` to CLI to run warm and clean sequentially and report classification and failure signatures.
+- **[Phase 4]** Defined `EnvironmentCandidate` and `CandidateType` models.
+- **[Phase 4]** Built Candidate Detection Engine in `candidates.ts` using independent Probes for node versions, environment variables, and executables.
+- **[Phase 4 Correction]** Refactored clean probes to strictly use `executeCleanCommand` to ensure consistency with the isolated `/workspace` snapshot.
+- **[Phase 4 Correction]** Filtered environment variables to a strict MVP allowlist to eliminate system noise and preserve privacy.
+- **[Phase 4 Correction]** Hardened the PATH shim by dynamically resolving the absolute path of real binaries on the host, preventing recursion and fragile bash path replacements.
+- **[Phase 4 Correction]** Added explicit logging for the duplicate MVP instrumentation pass.
+- **[Phase 4]** Added `coldproof investigate <command>` entry point to CLI to chain Execution -> Comparison -> Detection.
 
 ## Files Created
 - `cli/package.json`
@@ -27,6 +32,7 @@ Completed
 - `cli/src/engine/execute.ts`
 - `cli/src/engine/executeClean.ts`
 - `cli/src/engine/compare.ts`
+- `cli/src/engine/candidates.ts`
 - `cli/src/index.ts`
 
 ## Files Modified
@@ -38,6 +44,7 @@ Completed
 - Built a foundational `coldproof run` command as the primitive for execution before building the complex `verify` logic.
 - **[Phase 2]** Container isolation strategy: Mount host as `/src:ro` and use an ephemeral container initialization step (`tar cf - -C /src --exclude=node_modules . | tar xf - -C /workspace`) to construct a perfect, strictly-isolated, writable snapshot of the project in `/workspace`. This explicitly solves the `EROFS` issue caused by monorepo symlinks during `npm install` without leaking host `node_modules` or modifying the host directory.
 - **[Phase 3]** Kept the comparison engine deterministic and pure. It defines success strictly via `exitCode === 0`. Outputs are retained as evidence in the signature but don't factor into the pass/fail behavior check. Does not attempt candidate detection or causation yet.
+- **[Phase 4]** The Candidate Detector runs *after* comparison, and only if behavior diverged. It uses lightweight bash shims inserted into `PATH` to intercept and log invocations of standard developer binaries. Environment variables are checked only for presence using a strict MVP allowlist, ignoring noisy IDE/system flags and completely omitting values to ensure zero leak of secrets. Clean probes are run against the exact same `/workspace` snapshot as the clean execution runner.
 
 ## Dependencies
 - `commander` (CLI arguments)
@@ -69,20 +76,23 @@ Completed
 - **[Phase 3]** Validated `BOTH_FAIL` with `node -e 'process.exit(1)'`.
 - **[Phase 3]** Validated `WARM_PASS_CLEAN_FAIL` with `ls ./node_modules` (environment mismatch).
 - **[Phase 3]** Validated `WARM_FAIL_CLEAN_PASS` with `test -d /etc/apk` (macOS vs Alpine).
+- **[Phase 4]** Created Hero Fixture (`.coldproof-fixtures/hero.sh`) dependent on `jq` and `COLDPROOF_TEST_FLAG`. Successfully executed `coldproof investigate` to detect missing `COLDPROOF_TEST_FLAG`, mismatched `node` runtime, and the `jq` executable being invoked in warm but missing in clean.
 
 ## Tests
-Manual CLI validation completed across Phase 1, Phase 2, and Phase 3 deterministic scenarios. Automated unit tests deferred.
+Manual CLI validation completed across Phase 1, Phase 2, Phase 3, and Phase 4 deterministic scenarios. Automated unit tests deferred.
 
 ## Known Problems
 - Phase 1 typecheck originally threw `TS18003` and `TS2591` / `TS7006` errors.
   - **Root Cause:** The root `tsconfig.json` was blindly compiling `cli/` files without `@types/node` and didn't properly delegate to the workspace via `references`. Furthermore, the `cli/tsconfig.json` lacked explicit `types: ["node"]`.
   - **Fix:** Added `types: ["node"]` to `cli/tsconfig.json`. Added `files: []` and `references: [{ "path": "./cli" }]` to the root `tsconfig.json` to properly delegate compilation to the workspace.
+- Phase 2 execution initially threw `EROFS` during `npm install` due to monorepo symlinks in a read-only bind mount. Fixed via `/workspace` snapshot extraction.
+- **[Phase 4 Limitation]** The executable shim only detects binaries on our hardcoded allowlist (`jq`, `curl`, `git`, `psql`, etc.). It will not automatically discover obscure global npm binaries without expanding the allowlist or building a dynamic PATH analyzer.
+- **[Phase 4 Limitation]** The instrumentation pass executes the command a second time on the host machine to gather invocation telemetry. This is a duplicate execution that could be dangerous for commands with side-effects.
 
 ## Known Limitations
 - The project is just an empty foundation. No features are implemented.
 
 ## NOT YET IMPLEMENTED
-- Candidate detection
 - Perturbation engine
 - Failure signature comparison
 - Causal evidence classification
@@ -94,7 +104,7 @@ Manual CLI validation completed across Phase 1, Phase 2, and Phase 3 determinist
 Not ready.
 
 ## Next Phase
-Phase 4 — Candidate Detection
+Phase 5 — Perturbation Engine (Causality Proof)
 
 ## Forbidden Changes / Scope Boundaries
 - Do not implement universal OS/Language support.
