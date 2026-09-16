@@ -6,6 +6,7 @@ import { executeCommand } from './engine/execute.js';
 import { executeCleanCommand } from './engine/executeClean.js';
 import { compareExecutions } from './engine/compare.js';
 import { detectCandidates } from './engine/candidates.js';
+import { perturbCandidate } from './engine/perturb.js';
 
 
 const program = new Command();
@@ -173,9 +174,57 @@ program
         }
       }
 
-      console.log(chalk.gray('5. Status\n'));
-      console.log('   Causality not established.');
-      console.log('   Controlled perturbation required.');
+      console.log(chalk.gray('5. Perturbation\n'));
+      
+      const executableCandidates = candidates.filter(c => c.type === 'EXECUTABLE' && c.observed);
+      if (executableCandidates.length > 0) {
+        // Perturb the first executable candidate for MVP
+        const targetCandidate = executableCandidates[0];
+        console.log(`   Candidate:\n   ${chalk.cyan(targetCandidate.name)}`);
+        
+        const perturbationResult = await perturbCandidate(
+          targetCandidate,
+          command,
+          warmResult,
+          cleanResult,
+          comparison
+        );
+
+        if (perturbationResult.evidence.candidatePerturbed) {
+          const pIcon = perturbationResult.evidence.perturbedFailed ? chalk.red('✗ FAIL') : chalk.green('✓ PASS');
+          console.log(`\n   Perturbed execution:\n   ${pIcon}`);
+
+          console.log(chalk.gray('\n6. Evidence\n'));
+          
+          let eIcon = '';
+          switch (perturbationResult.evidence.classification) {
+            case 'CONFIRMED': eIcon = chalk.green.bold('CONFIRMED'); break;
+            case 'STRONG_EVIDENCE': eIcon = chalk.green.bold('STRONG_EVIDENCE'); break;
+            case 'NOT_IMPLICATED': eIcon = chalk.yellow.bold('NOT_IMPLICATED'); break;
+            default: eIcon = chalk.gray.bold('UNABLE_TO_TEST'); break;
+          }
+
+          console.log(`   ${eIcon}\n`);
+          console.log(`   ${perturbationResult.evidence.candidateObserved ? '✓' : '✗'} ${targetCandidate.name} was observed during warm execution`);
+          console.log(`   ${perturbationResult.evidence.candidatePerturbed ? '✓' : '✗'} ${targetCandidate.name} was blocked in warm execution`);
+          console.log(`   ${perturbationResult.evidence.perturbedFailed ? '✓' : '✗'} perturbed execution failed`);
+          console.log(`   ${perturbationResult.evidence.failureSignatureMatched ? '✓' : '✗'} failure signature matched the clean failure\n`);
+
+          console.log(chalk.gray('7. Conclusion\n'));
+          if (perturbationResult.evidence.classification === 'CONFIRMED' || perturbationResult.evidence.classification === 'STRONG_EVIDENCE') {
+             console.log(`   ${chalk.cyan(targetCandidate.name)} is supported as the environmental cause`);
+             console.log('   of the observed warm/clean behavioral divergence.');
+          } else {
+             console.log(`   ${chalk.cyan(targetCandidate.name)} is ${chalk.yellow('not supported')} as the environmental cause.`);
+          }
+        } else {
+          console.log('   Perturbation failed or was not applied.');
+        }
+
+      } else {
+        console.log('   No supported executable candidates found for perturbation.');
+        console.log('   Causality not established.');
+      }
     } else {
       console.log(chalk.gray('\n4. Environment candidates\n'));
       console.log('   No behavioral failure to investigate.');

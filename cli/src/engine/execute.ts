@@ -1,14 +1,14 @@
 import { spawn } from 'node:child_process';
 import type { ExecutionResult } from '../types.js';
 
-export async function executeCommand(command: string): Promise<ExecutionResult> {
+export async function executeCommand(command: string, customEnv?: NodeJS.ProcessEnv): Promise<ExecutionResult> {
   return new Promise((resolve) => {
     const startTime = performance.now();
     let stdout = '';
     let stderr = '';
 
     // Spawn the command in a shell
-    const child = spawn(command, { shell: true });
+    const child = spawn(command, { shell: true, env: customEnv || process.env });
 
     child.stdout.on('data', (data) => {
       stdout += data.toString();

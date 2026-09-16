@@ -47,3 +47,21 @@ export interface EnvironmentCandidate {
   observed?: boolean;
   reason: string;
 }
+
+export interface PerturbationEvidence {
+  classification: 'CONFIRMED' | 'STRONG_EVIDENCE' | 'NOT_IMPLICATED' | 'UNABLE_TO_TEST';
+  candidateObserved: boolean;
+  candidatePerturbed: boolean;
+  cleanFailed: boolean;
+  perturbedFailed: boolean;
+  failureSignatureMatched: boolean;
+  explanation: string;
+}
+
+export interface PerturbationResult {
+  candidate: EnvironmentCandidate;
+  originalWarm: ExecutionResult;
+  clean: ExecutionResult;
+  perturbedWarm: ExecutionResult | null;
+  evidence: PerturbationEvidence;
+}

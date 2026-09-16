@@ -1,7 +1,7 @@
 # ColdProof Progress
 
 ## Current Phase
-Phase 4 — Candidate Detection
+Phase 5 — Perturbation Engine (Causality Proof)
 
 ## Status
 Completed
@@ -24,6 +24,11 @@ Completed
 - **[Phase 4 Correction]** Hardened the PATH shim by dynamically resolving the absolute path of real binaries on the host, preventing recursion and fragile bash path replacements.
 - **[Phase 4 Correction]** Added explicit logging for the duplicate MVP instrumentation pass.
 - **[Phase 4]** Added `coldproof investigate <command>` entry point to CLI to chain Execution -> Comparison -> Detection.
+- **[Phase 5]** Defined `PerturbationResult` and `PerturbationEvidence` structures in `types.ts` for structured causal evaluation.
+- **[Phase 5]** Extended `executeCommand` to support optional execution environment overrides.
+- **[Phase 5]** Implemented the core Perturbation Engine in `perturb.ts` for executable candidates. It safely generates an isolated bash shim to block access (returns exit code 127) while leaving the system `PATH` and binaries untouched.
+- **[Phase 5]** Built failure signature matching in `perturb.ts` that compares exit codes to classify causal evidence as `STRONG_EVIDENCE`, `NOT_IMPLICATED`, or `UNABLE_TO_TEST`.
+- **[Phase 5]** Integrated Perturbation seamlessly into `coldproof investigate` CLI command, running perturbation dynamically if `EXECUTABLE` candidates are observed.
 
 ## Files Created
 - `cli/package.json`
@@ -33,6 +38,7 @@ Completed
 - `cli/src/engine/executeClean.ts`
 - `cli/src/engine/compare.ts`
 - `cli/src/engine/candidates.ts`
+- `cli/src/engine/perturb.ts`
 - `cli/src/index.ts`
 
 ## Files Modified
@@ -45,6 +51,7 @@ Completed
 - **[Phase 2]** Container isolation strategy: Mount host as `/src:ro` and use an ephemeral container initialization step (`tar cf - -C /src --exclude=node_modules . | tar xf - -C /workspace`) to construct a perfect, strictly-isolated, writable snapshot of the project in `/workspace`. This explicitly solves the `EROFS` issue caused by monorepo symlinks during `npm install` without leaking host `node_modules` or modifying the host directory.
 - **[Phase 3]** Kept the comparison engine deterministic and pure. It defines success strictly via `exitCode === 0`. Outputs are retained as evidence in the signature but don't factor into the pass/fail behavior check. Does not attempt candidate detection or causation yet.
 - **[Phase 4]** The Candidate Detector runs *after* comparison, and only if behavior diverged. It uses lightweight bash shims inserted into `PATH` to intercept and log invocations of standard developer binaries. Environment variables are checked only for presence using a strict MVP allowlist, ignoring noisy IDE/system flags and completely omitting values to ensure zero leak of secrets. Clean probes are run against the exact same `/workspace` snapshot as the clean execution runner.
+- **[Phase 5]** The Perturbation Engine implements intervention-based evidence for executable candidates. Rather than simply observing differences (correlation), it manipulates the warm environment (hiding the executable via an isolated PATH shim) and evaluates whether that intervention reproduces the clean environment's failure signature. It strictly categorizes evidence based on this experiment rather than guessing causality.
 
 ## Dependencies
 - `commander` (CLI arguments)
@@ -77,9 +84,11 @@ Completed
 - **[Phase 3]** Validated `WARM_PASS_CLEAN_FAIL` with `ls ./node_modules` (environment mismatch).
 - **[Phase 3]** Validated `WARM_FAIL_CLEAN_PASS` with `test -d /etc/apk` (macOS vs Alpine).
 - **[Phase 4]** Created Hero Fixture (`.coldproof-fixtures/hero.sh`) dependent on `jq` and `COLDPROOF_TEST_FLAG`. Successfully executed `coldproof investigate` to detect missing `COLDPROOF_TEST_FLAG`, mismatched `node` runtime, and the `jq` executable being invoked in warm but missing in clean.
+- **[Phase 5]** Executed Hero Fixture. Confirmed perturbation correctly blocked `jq` in the warm environment, produced matching exit codes (`127`), and correctly reported `STRONG_EVIDENCE` of causality without modifying the user's host environment.
+- **[Phase 5]** Evaluated `BOTH_PASS` scenario with `node -v` to ensure perturbation correctly short-circuits when no behavioral failure exists.
 
 ## Tests
-Manual CLI validation completed across Phase 1, Phase 2, Phase 3, and Phase 4 deterministic scenarios. Automated unit tests deferred.
+Manual CLI validation completed across Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 deterministic scenarios. Automated unit tests deferred.
 
 ## Known Problems
 - Phase 1 typecheck originally threw `TS18003` and `TS2591` / `TS7006` errors.
@@ -93,21 +102,20 @@ Manual CLI validation completed across Phase 1, Phase 2, Phase 3, and Phase 4 de
 - The project is just an empty foundation. No features are implemented.
 
 ## NOT YET IMPLEMENTED
-- Perturbation engine
-- Failure signature comparison
-- Causal evidence classification
+- Advanced Failure signature comparison (e.g., stderr textual diffing normalization)
+- Perturbing environment variables
+- Perturbing node runtime version
 - Backend API (Fastify)
 - PostgreSQL / Prisma
 - Dashboard (Next.js)
 
-## Demo Status
+## Phase Integrity
 Not ready.
 
 ## Next Phase
-Phase 5 — Perturbation Engine (Causality Proof)
+Phase 6 — Backend API Foundation (Fastify)
 
 ## Forbidden Changes / Scope Boundaries
 - Do not implement universal OS/Language support.
 - Do not implement eBPF/ptrace tracing.
 - Do not write fake tests.
-- Do not push to GitHub unless explicitly asked.
