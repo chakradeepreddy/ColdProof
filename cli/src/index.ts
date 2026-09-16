@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { executeCommand } from './engine/execute.js';
+import { executeCleanCommand } from './engine/executeClean.js';
 
 const program = new Command();
 
@@ -15,11 +16,16 @@ program
   .command('run')
   .description('Run a command and capture execution telemetry')
   .argument('<command>', 'The command to run')
-  .action(async (command: string) => {
-    const spinner = ora(`Executing: ${chalk.cyan(command)}`).start();
+  .option('-c, --clean', 'Execute command in a clean Docker environment')
+  .action(async (command: string, options: { clean?: boolean }) => {
+    const mode = options.clean ? chalk.blue('clean') : chalk.cyan('warm');
+    const spinner = ora(`Executing (${mode}): ${chalk.cyan(command)}`).start();
     
     try {
-      const result = await executeCommand(command);
+      const result = options.clean
+        ? await executeCleanCommand(command, process.cwd())
+        : await executeCommand(command);
+
       
       if (result.exitCode === 0) {
         spinner.succeed(`Execution successful (${result.durationMs.toFixed(2)}ms)`);
