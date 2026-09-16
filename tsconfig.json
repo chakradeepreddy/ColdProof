@@ -15,5 +15,9 @@
     "node_modules",
     "**/dist",
     "**/build"
+  ],
+  "files": [],
+  "references": [
+    { "path": "./cli" }
   ]
 }

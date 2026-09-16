@@ -59,7 +59,10 @@ None this phase.
 Manual CLI validation completed. Automated unit tests deferred.
 
 ## Known Problems
-None at this time.
+- Phase 1 typecheck originally threw `TS18003` and `TS2591` / `TS7006` errors.
+  - **Root Cause:** The root `tsconfig.json` was blindly compiling `cli/` files without `@types/node` and didn't properly delegate to the workspace via `references`. Furthermore, the `cli/tsconfig.json` lacked explicit `types: ["node"]`.
+  - **Fix:** Added `types: ["node"]` to `cli/tsconfig.json`. Added `files: []` and `references: [{ "path": "./cli" }]` to the root `tsconfig.json` to properly delegate compilation to the workspace.
+  - **Result:** `npm run typecheck` now passes cleanly and infers Node's callback parameters natively.
 
 ## Known Limitations
 The project is just an empty foundation. No features are implemented.
