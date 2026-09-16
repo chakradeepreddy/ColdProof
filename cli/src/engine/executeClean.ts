@@ -21,7 +21,7 @@ export async function executeCleanCommand(
       `${projectPath}:/src:ro`,
       '-w',
       '/workspace',
-      'node:22-alpine',
+      'node:22-slim',
       'sh',
       '-c',
       'tar cf - -C /src --exclude=node_modules . | tar xf - -C /workspace && eval "$0"',

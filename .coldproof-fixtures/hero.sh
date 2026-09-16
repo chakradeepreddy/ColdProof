@@ -1,3 +1,7 @@
 #!/bin/bash
-if [ -z "$COLDPROOF_TEST_FLAG" ]; then exit 1; fi
+set -e
+
+# The command passes if jq is available on the host (warm).
+# The command fails if jq is missing in the container (clean).
 jq --version > /dev/null
+echo "Success! jq is installed."

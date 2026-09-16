@@ -143,22 +143,25 @@ program
       console.log(`   ${chalk.green('✓ ' + comparison.classification)}`);
     }
 
+    let detectedCandidates: any[] = [];
+    let finalPerturbationResult: any = null;
+
     if (comparison.classification === 'WARM_PASS_CLEAN_FAIL') {
       console.log(chalk.gray('\n4. Environment candidates\n'));
       const spinner = ora('Detecting candidates...').start();
-      const candidates = await detectCandidates(command, process.cwd());
+      detectedCandidates = await detectCandidates(command, process.cwd());
       spinner.stop();
 
-      if (candidates.length === 0) {
+      if (detectedCandidates.length === 0) {
         console.log('   No candidates found.');
       } else {
-        const byType = candidates.reduce((acc, c) => {
+        const byType = detectedCandidates.reduce((acc, c) => {
           if (!acc[c.type]) acc[c.type] = [];
           acc[c.type].push(c);
           return acc;
-        }, {} as Record<string, typeof candidates>);
+        }, {} as Record<string, typeof detectedCandidates>);
 
-        for (const [type, group] of Object.entries(byType)) {
+        for (const [type, group] of Object.entries(byType) as [string, any[]][]) {
           console.log(`   ${chalk.bold(type)}`);
           for (const c of group) {
             console.log(`   ${chalk.cyan(c.name)}`);
@@ -176,7 +179,7 @@ program
 
       console.log(chalk.gray('5. Perturbation\n'));
       
-      const executableCandidates = candidates.filter(c => c.type === 'EXECUTABLE' && c.observed);
+      const executableCandidates = detectedCandidates.filter(c => c.type === 'EXECUTABLE' && c.observed);
       if (executableCandidates.length > 0) {
         // Perturb the first executable candidate for MVP
         const targetCandidate = executableCandidates[0];
@@ -189,6 +192,7 @@ program
           cleanResult,
           comparison
         );
+        finalPerturbationResult = perturbationResult;
 
         if (perturbationResult.evidence.candidatePerturbed) {
           const pIcon = perturbationResult.evidence.perturbedFailed ? chalk.red('✗ FAIL') : chalk.green('✓ PASS');
@@ -233,6 +237,44 @@ program
     } else {
       console.log(chalk.gray('\n4. Environment candidates\n'));
       console.log('   No behavioral failure to investigate.');
+    }
+
+    // Attempt to upload to the backend if configured
+    const token = process.env.COLDPROOF_TOKEN;
+    const projectId = process.env.COLDPROOF_PROJECT_ID;
+    
+    if (token && projectId && comparison.behaviorChanged) {
+      console.log(chalk.gray('\n8. Telemetry\n'));
+      const spinner = ora('Uploading investigation results to ColdProof Cloud...').start();
+      try {
+        const payload = {
+          projectId,
+          command,
+          comparison,
+          candidates: comparison.classification === 'WARM_PASS_CLEAN_FAIL' ? detectedCandidates : [],
+          perturbationResult: finalPerturbationResult
+        };
+
+        const apiUrl = process.env.COLDPROOF_API_URL || 'http://localhost:3001';
+        const res = await fetch(`${apiUrl}/api/investigations`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          const data = await res.json() as any;
+          spinner.succeed(`Investigation uploaded successfully: ${data.id}`);
+        } else {
+          const err = await res.text();
+          spinner.fail(`Failed to upload investigation: ${err}`);
+        }
+      } catch (e: any) {
+        spinner.fail(`Failed to upload investigation: ${e.message}`);
+      }
     }
   });
 

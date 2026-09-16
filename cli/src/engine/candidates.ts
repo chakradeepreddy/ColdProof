@@ -9,7 +9,7 @@ import { executeCleanCommand } from './executeClean.js';
 const execAsync = promisify(exec);
 
 const BINARY_ALLOWLIST = ['jq', 'curl', 'git', 'psql', 'python', 'python3', 'node', 'npm'];
-const ENV_ALLOWLIST = new Set(['DATABASE_URL', 'API_URL', 'NODE_ENV', 'CI', 'PORT', 'HOST', 'DEBUG', 'COLDPROOF_TEST_FLAG']);
+const ENV_ALLOWLIST = new Set(['DATABASE_URL', 'API_URL', 'NODE_ENV', 'CI', 'PORT', 'HOST', 'DEBUG']);
 
 export async function detectCandidates(command: string, projectPath: string): Promise<EnvironmentCandidate[]> {
   const candidates: EnvironmentCandidate[] = [];

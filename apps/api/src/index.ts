@@ -199,6 +199,21 @@ fastify.post('/api/investigations', {
   });
 });
 
+fastify.get('/api/investigations', { preHandler: authenticate }, async (request, reply) => {
+  const userId = request.user!.id;
+  
+  const investigations = await prisma.investigation.findMany({
+    where: {
+      project: {
+        userId: userId
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return investigations;
+});
+
 fastify.get('/api/investigations/:id', { preHandler: authenticate }, async (request, reply) => {
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
@@ -223,8 +238,8 @@ fastify.get('/api/investigations/:id', { preHandler: authenticate }, async (requ
 // Start the server
 const start = async () => {
   try {
-    await fastify.listen({ port: 3000, host: '0.0.0.0' });
-    console.log(`Server listening on http://localhost:3000`);
+    await fastify.listen({ port: 3001, host: '0.0.0.0' });
+    console.log(`Server listening on http://localhost:3001`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
