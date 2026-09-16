@@ -33,7 +33,7 @@ This document defines what is IN and OUT of scope for the ColdProof hackathon MV
 - **eBPF/ptrace Universal Tracing**: Too risky and complex for a 36-hour hackathon. We will use practical approximations like PATH shims for MVP.
 - **Automatic Project Repair**: The system diagnoses and documents; it does not automatically fix code or configuration.
 - **Arbitrary Server-Side Code Execution**: All code runs locally on the developer's machine. The backend only handles JSON.
-- **Enterprise Integrations / Complex Auth**: No authentication for the MVP to save time.
+- **Enterprise Integrations / Complex Auth**: We integrated Firebase Auth for basic identity, but RBAC, Organizations, and Teams are out of scope.
 - **Generic AI Coding Assistant**: AI is not the source of truth for causality.
 
 ## Why these boundaries?

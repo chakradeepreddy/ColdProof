@@ -42,27 +42,29 @@ The standard output of a CLI investigation, uploaded to the backend.
 
 ### Backend API
 - Built with Fastify.
-- Exposes endpoints to receive and serve investigation JSON payloads.
+- Enforces ownership constraints by verifying Firebase JWTs via `firebase-admin`.
+- Exposes endpoints to securely receive and serve `InvestigationPayload` JSON from the CLI.
+- Explicitly isolated from any command execution duties (prevents RCE).
 
 ### PostgreSQL
-- Stores investigations and environment contracts.
-- Interacted with via Prisma ORM.
+- Stores ColdProof domain entities: `User`, `Project`, and `Investigation`.
+- Interacted with via Prisma ORM for robust migrations and type safety.
 
-### Dashboard
+### Dashboard (Planned)
 - Built with Next.js.
-- Visualizes the investigation results, causal diffs, and environment contracts.
+- Handles user login via Firebase Auth client SDK.
+- Visualizes the investigation results, causal diffs, and evidence.
 
 ## 7. Deployment Architecture (Planned)
 - **Frontend**: Vercel
 - **Backend**: Render
 - **Database**: Supabase PostgreSQL
+- **Identity**: Firebase Auth
 - **Source Control**: GitHub
 
 ## 8. Security Boundary
 The backend only receives JSON payloads. It does not run user code. The CLI executes user code, but only on the developer's local machine or within a local Docker container. 
-
-## 9. Hackathon Simplifications
-For the hackathon MVP, there is no authentication. The CLI generates an investigation UUID and uploads the result. The backend stores it, and the dashboard exposes it via a public URL (`/investigation/<uuid>`).
+The API strictly verifies Firebase ID tokens to map requests to PostgreSQL `User` identities, ensuring no user can access another user's projects or investigations.
 
 ---
-*Note: This architecture describes the planned end-state. Currently, only the project foundation is implemented.*
+*Note: This architecture describes the current state and near-term planned components. Currently, Phases 1-6 are implemented.*

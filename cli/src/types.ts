@@ -66,3 +66,11 @@ export interface PerturbationResult {
   perturbedWarm: ExecutionResult | null;
   evidence: PerturbationEvidence;
 }
+
+export interface InvestigationPayload {
+  projectId: string;
+  command: string;
+  comparison: ComparisonResult;
+  candidates: EnvironmentCandidate[];
+  perturbationResult?: PerturbationResult | null;
+}

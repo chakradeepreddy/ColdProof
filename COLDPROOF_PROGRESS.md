@@ -108,15 +108,69 @@ Manual CLI validation completed across Phase 1, Phase 2, Phase 3, Phase 4, and P
 - Advanced Failure signature comparison (e.g., stderr textual diffing normalization)
 - Perturbing environment variables
 - Perturbing node runtime version
-- Backend API (Fastify)
-- PostgreSQL / Prisma
+- **[Phase 6]** Initialized `apps/api` workspace with Fastify.
+- **[Phase 6]** Configured Prisma with PostgreSQL schema (`User`, `Project`, `Investigation`).
+- **[Phase 6]** Implemented Firebase Authentication JWT verification via `firebase-admin`.
+- **[Phase 6]** Implemented strict ownership constraints and API payload validation in Fastify routes.
+
+## Files Created
+- `apps/api/package.json`
+- `apps/api/tsconfig.json`
+- `apps/api/src/index.ts`
+- `apps/api/prisma/schema.prisma`
+- `apps/api/.env` and `apps/api/.env.example`
+- `apps/api/test.js`
+
+## Files Modified
+- `cli/src/types.ts`
+- `package.json` (root, to include `apps/api` in workspaces)
+
+## Architecture Decisions
+- **[Phase 6]** Backend API strictly enforces separation of concerns: Fastify handles request validation and routing, Firebase handles identity (JWT validation), and PostgreSQL manages state and relationships.
+- **[Phase 6]** API avoids executing arbitrary commands to prevent Remote Code Execution (RCE) vulnerabilities. It acts purely as a secure ingestion and query layer for `InvestigationPayload` objects generated locally by the CLI.
+- **[Phase 6]** Extracted CLI `ExecutionResult` and other types into `InvestigationPayload` within `cli/src/types.ts` to form a strict contract between the client CLI and the Fastify backend without duplicating types.
+
+## Dependencies
+- `fastify` (API routing)
+- `prisma`, `@prisma/client` (PostgreSQL ORM)
+- `firebase-admin` (Authentication verification)
+- `dotenv`, `@fastify/cors`
+
+## Git State
+- Repository was already initialized.
+- Branch: `main`
+- Status: Modified and untracked files for `apps/api` and `cli/src/types.ts`.
+
+## Commands Used
+- `cd apps/api && npm init -y`
+- `npm install fastify firebase-admin @prisma/client`
+- `npx prisma init`
+- `npx prisma migrate dev --name init`
+- `node test.js`
+
+## Validation
+- **[Phase 6]** Server startup successful (`node dist/index.js`).
+- **[Phase 6]** Unauthenticated requests to `/api/projects` correctly rejected with HTTP 401.
+- **[Phase 6]** Verified Firebase JWT hook mapping mock token (`TEST_TOKEN`) to a PostgreSQL `User` record creation.
+- **[Phase 6]** Successfully completed `POST /api/investigations` with realistic `InvestigationPayload`, storing `Json` blob in PostgreSQL and retrieving via `GET /api/investigations/:id`.
+
+## Tests
+Automated mock-auth integration test passed for Phase 6 endpoints: `GET /health`, `GET /api/me`, `POST /api/projects`, `GET /api/projects`, `POST /api/investigations`, and `GET /api/investigations/:id`.
+
+## Known Problems
+- **[Phase 6 Limitation]** Live Firebase tokens cannot be tested end-to-end without a frontend SDK to mint them. We validated the admin verification logic by bypassing it strictly during `NODE_ENV='test'`.
+
+## Known Limitations
+- The project is just an empty foundation. No features are implemented.
+
+## NOT YET IMPLEMENTED
 - Dashboard (Next.js)
 
 ## Phase Integrity
-Not ready.
+Ready for checkpoint.
 
 ## Next Phase
-Phase 6 — Backend API Foundation (Fastify)
+Phase 7 — Next.js Dashboard Foundation
 
 ## Forbidden Changes / Scope Boundaries
 - Do not implement universal OS/Language support.
