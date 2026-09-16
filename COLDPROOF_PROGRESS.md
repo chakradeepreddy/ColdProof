@@ -1,41 +1,38 @@
 # ColdProof Progress
 
 ## Current Phase
-Phase 0 — Project Foundation
+Phase 1 — Core CLI & Warm Execution Engine
 
 ## Status
 Completed
 
 ## Completed Work
-- Workspace reconnaissance (checked Git, directories, tools)
-- Created root `package.json` with npm workspaces configured
-- Created strict `tsconfig.json`
-- Created `.gitignore`
-- Created `README.md`
-- Created `docs/ARCHITECTURE.md`
-- Created `docs/MVP_BOUNDARIES.md`
-- Verified local environment (Node, npm, Git, Docker)
+- Scaffolded CLI workspace (`cli/package.json`, `cli/tsconfig.json`).
+- Installed `commander`, `chalk`, `ora` for CLI UX.
+- Implemented `ExecutionResult` types.
+- Implemented `executeCommand` using Node's `child_process.spawn`.
+- Implemented `coldproof run <command>` entry point.
+- Validated command execution (success and failure pathways).
 
 ## Files Created
-- `package.json`
-- `tsconfig.json`
-- `.gitignore`
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/MVP_BOUNDARIES.md`
-- `COLDPROOF_PROGRESS.md`
-- `env.d.ts`
+- `cli/package.json`
+- `cli/tsconfig.json`
+- `cli/src/types.ts`
+- `cli/src/engine/execute.ts`
+- `cli/src/index.ts`
 
 ## Files Modified
-None. (Fresh initialization)
+None this phase.
 
 ## Architecture Decisions
-- Configured project as a monorepo using npm workspaces (`apps/*`, `packages/*`, `cli`) to allow seamless sharing of types and configurations.
-- Enforced strict TypeScript configuration (`NodeNext` module resolution, strict mode).
-- Deferred all actual implementation of execution, database, or API logic to subsequent phases.
+- Used `child_process.spawn` instead of `exec` to support stream capturing (stdout/stderr) natively without buffer limits.
+- Built a foundational `coldproof run` command as the primitive for execution before building the complex `verify` logic.
 
 ## Dependencies
-None yet (deliberately deferred).
+- `commander` (CLI arguments)
+- `chalk` (Terminal coloring)
+- `ora` (Terminal spinners)
+- `@types/node` (Node type definitions)
 
 ## Git State
 - Repository was already initialized.
@@ -50,25 +47,25 @@ None yet (deliberately deferred).
 - **Docker**: 29.4.2
 
 ## Commands Used
-- `git status && git remote -v && node --version && npm --version && git --version && docker --version`
+- `npm install` (to bootstrap workspaces)
+- `npm run build` (within `cli`)
+- `node ./dist/index.js run "node --version"`
 
 ## Validation
-- Environment check passed.
-- All configuration files created successfully.
-- `npm run typecheck` now executes successfully.
+- Successfully executed a simple command and parsed exit code 0.
+- Successfully executed a failing command (`node -e 'process.exit(1)'`) and parsed exit code 1.
 
 ## Tests
-None (N/A for Phase 0).
+Manual CLI validation completed. Automated unit tests deferred.
 
 ## Known Problems
-None at this time. (TS18003 issue was resolved by adding a root `env.d.ts` file).
+None at this time.
 
 ## Known Limitations
 The project is just an empty foundation. No features are implemented.
 
 ## NOT YET IMPLEMENTED
-- ColdProof CLI
-- Docker execution engine
+- Clean Docker execution engine
 - Candidate detection
 - Perturbation engine
 - Failure signature comparison
@@ -81,7 +78,7 @@ The project is just an empty foundation. No features are implemented.
 Not ready.
 
 ## Next Phase
-Phase 1 — Core CLI & Execution Engine Setup
+Phase 2 — Clean Docker Execution Engine
 
 ## Forbidden Changes / Scope Boundaries
 - Do not implement universal OS/Language support.
