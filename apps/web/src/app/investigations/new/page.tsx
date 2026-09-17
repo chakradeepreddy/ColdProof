@@ -105,7 +105,7 @@ export default function NewInvestigationPage() {
   if (loading || !user) return null;
 
   return (
-    <div className="px-6 py-8 max-w-3xl mx-auto w-full">
+    <div className="px-6 py-8 max-w-3xl mx-auto w-full animate-fade-in">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-primary tracking-tight mb-1.5">New Investigation</h1>
@@ -115,7 +115,7 @@ export default function NewInvestigationPage() {
       </div>
 
       {/* How it works — compact info block */}
-      <div className="bg-experiment/8 border border-experiment/20 rounded-lg p-4 mb-7 flex gap-3">
+      <div className="bg-experiment/8 border border-experiment/20 rounded-xl p-4 mb-7 flex gap-3 animate-slide-up" style={{animationDelay:'40ms'}}>
         <svg className="w-4 h-4 text-experiment flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -136,7 +136,7 @@ export default function NewInvestigationPage() {
       )}
 
       {/* Step 1 */}
-      <div className="bg-surface border border-border rounded-lg p-5 mb-4">
+      <div className="bg-surface border border-border rounded-xl p-5 mb-4 animate-slide-up" style={{animationDelay:'80ms'}}>
         <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-3">
           1 · Enter the failing command
         </h2>
@@ -157,7 +157,7 @@ export default function NewInvestigationPage() {
       </div>
 
       {/* Step 2 */}
-      <div className="bg-surface border border-border rounded-lg p-5 mb-5">
+      <div className="bg-surface border border-border rounded-xl p-5 mb-5 animate-slide-up" style={{animationDelay:'160ms'}}>
         <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-3">
           2 · Run ColdProof locally
         </h2>

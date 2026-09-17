@@ -5,15 +5,15 @@
   --color-surface: #111417;
   --color-elevated: #171B1F;
   --color-border: #252A30;
-  
+
   --color-primary: #E7E5E0;
   --color-secondary: #8B929A;
-  
+
   --color-experiment: #6E9CCB;
   --color-pass: #6FAF86;
   --color-fail: #C86B6B;
   --color-evidence: #D0A253;
-  
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -22,10 +22,69 @@
   *, ::before, ::after {
     border-color: var(--color-border);
   }
-  
+
   body {
     background-color: var(--color-background);
     color: var(--color-primary);
     font-family: var(--font-sans);
+  }
+}
+
+/* ─── Animations ─────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(6px); }
+  to   { opacity: 1; transform: translateX(0);   }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+.animate-fade-in   { animation: fade-in    200ms ease both; }
+.animate-slide-up  { animation: slide-up   260ms ease both; }
+.animate-scale-in  { animation: scale-in   220ms ease both; }
+
+/* Stagger helpers — applied to children via parent class */
+.stagger-children > *:nth-child(1) { animation-delay:  0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay:120ms; }
+.stagger-children > *:nth-child(4) { animation-delay:180ms; }
+.stagger-children > *:nth-child(5) { animation-delay:240ms; }
+.stagger-children > *:nth-child(n+6) { animation-delay:300ms; }
+
+/* Scroll-reveal: hidden by default, JS adds .revealed */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 350ms ease, transform 350ms ease;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Reduced motion: skip all transforms/fades */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in,
+  .stagger-children > *,
+  .reveal,
+  .reveal.revealed {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

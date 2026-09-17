@@ -377,6 +377,22 @@ fastify.post('/api/investigations/:id/explain', { preHandler: authenticate }, as
   return { aiExplanation: updated.aiExplanation };
 });
 
+fastify.delete('/api/investigations/:id', { preHandler: authenticate }, async (request, reply) => {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  const investigation = await prisma.investigation.findFirst({
+    where: { id, project: { userId } }
+  });
+
+  if (!investigation) {
+    return reply.status(404).send({ error: 'Investigation not found' });
+  }
+
+  await prisma.investigation.delete({ where: { id } });
+  return reply.status(200).send({ deleted: true });
+});
+
 // Start the server
 const start = async () => {
   try {
