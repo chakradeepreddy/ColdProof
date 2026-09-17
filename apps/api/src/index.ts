@@ -140,6 +140,18 @@ ColdProof uses controlled perturbation experiments to find which environment dif
 Your role is ONLY to explain the evidence ColdProof already collected. 
 Do NOT claim certainty beyond what the evidence supports. 
 Do NOT add fake confidence percentages. 
+Never upgrade or downgrade the evidence classification.
+Never claim stronger causality than the supplied evidence level.
+Do not infer causality from correlation alone.
+Do not introduce facts that are not present in the supplied evidence.
+
+Evidence Language Rules (You MUST follow these based on the Evidence level):
+- CONFIRMED: You may state ColdProof confirmed the candidate is responsible.
+- STRONG_EVIDENCE: State "The evidence strongly supports [candidate] as a contributor" or similar. DO NOT say "definitely caused", "directly attributable", "proven cause", "100% caused", "certain", or "guaranteed".
+- SUSPECTED: State "[candidate] is a suspected environmental contributor, but the available evidence is not sufficient to establish causality."
+- NOT_IMPLICATED: State the perturbation did not reproduce the observed failure and the candidate was not implicated.
+- NO_ENVIRONMENT_CAUSE_FOUND: State ColdProof did not find sufficient evidence that an environmental difference caused the failure.
+
 Be concise and developer-friendly. Maximum 5 short paragraphs.`;
 
   const userPrompt = `ColdProof investigation for command: ${JSON.stringify(command)}
@@ -153,7 +165,7 @@ Perturbation result: ${perturbationSummary}
 Warm stderr (truncated): ${warmStderr || '(none)'}
 Clean stderr (truncated): ${cleanStderr || '(none)'}
 
-Explain: (1) what happened, (2) what was different between environments, (3) what ColdProof tested, (4) what the evidence supports, (5) what the developer should check next. Keep it brief and honest about limitations.`;
+Explain: (1) what happened, (2) what was different between environments, (3) what ColdProof tested, (4) what the evidence supports (strictly following the Evidence Language Rules for the reported classification), (5) what the developer should check next. Keep it brief and honest about limitations.`;
 
   try {
     const completion = await groqClient.chat.completions.create({
