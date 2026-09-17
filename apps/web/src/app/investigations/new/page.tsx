@@ -81,7 +81,7 @@ export default function NewInvestigationPage() {
   }, [waiting, projectId, token, router]);
 
   const effectiveCommand = command.trim() || 'your-command';
-  const displayCommand = `npx coldproof investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
+  const displayCommand = `node /path/to/ColdProof/cli/dist/index.js investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
   const fullCliCommand = projectId && token
     ? `export COLDPROOF_API_URL="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}"\nexport COLDPROOF_TOKEN="${token}"\nexport COLDPROOF_PROJECT_ID="${projectId}"\n${displayCommand}`
     : '';
