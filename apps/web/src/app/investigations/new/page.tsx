@@ -152,12 +152,25 @@ export default function NewInvestigationPage() {
       {/* Step 2 */}
       <div className="bg-surface border border-border rounded-lg p-5 mb-5">
         <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-3">
-          2 · Run ColdProof from your project root
+          2 · Run ColdProof locally
         </h2>
-        <p className="text-xs text-secondary mb-4 leading-relaxed">
-          Copy and run this in your terminal from <strong className="text-primary">your project&apos;s root directory</strong>.
-          The investigation runs locally — warm execution, then Docker clean execution, then perturbation.
-        </p>
+        <div className="text-xs text-secondary mb-4 leading-relaxed space-y-2">
+          <ol className="list-decimal list-inside space-y-1.5 ml-1">
+            <li>Open Terminal.</li>
+            <li>Navigate to the <strong className="text-primary">root directory of the project being investigated</strong>.</li>
+            <li>Replace both placeholders before running:
+              <ul className="list-disc list-inside ml-5 mt-1 space-y-1 text-secondary/90">
+                <li><code className="text-primary bg-[#08090A] border border-border/60 px-1 py-0.5 rounded">/path/to/ColdProof</code> → your actual ColdProof directory path</li>
+                <li><code className="text-primary bg-[#08090A] border border-border/60 px-1 py-0.5 rounded">&quot;your-command&quot;</code> → the failing command you entered above</li>
+              </ul>
+            </li>
+            <li>Run the resulting command.</li>
+          </ol>
+          <p className="mt-3 text-secondary/80 bg-experiment/5 border border-experiment/10 p-2.5 rounded">
+            ColdProof performs Warm → Clean (Docker) → Compare → Perturb → Prove locally.
+            When the investigation finishes, the structured results are uploaded automatically and appear in the web dashboard.
+          </p>
+        </div>
 
         {projectId && token ? (
           <div className="relative">
