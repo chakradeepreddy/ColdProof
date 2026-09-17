@@ -141,12 +141,11 @@ function EvidenceCard({ evidence, candidateName }: { evidence: any; candidateNam
 
 // ─── Delete modal ───────────────────────────────────────────────────
 function DeleteModal({
-  open, onCancel, onDeleted, getToken,
+  open, onCancel, onDeleted, getToken, id
 }: { open: boolean; onCancel: () => void; onDeleted: () => void; getToken: () => Promise<string | null>; id: string }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const idRef = useRef('');
 
   useEffect(() => { if (open) { setError(''); setDeleting(false); setTimeout(() => cancelRef.current?.focus(), 50); } }, [open]);
   useEffect(() => {
@@ -182,7 +181,7 @@ function DeleteModal({
             try {
               const token = await getToken();
               const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/investigations/${idRef.current || ''}`,
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/investigations/${id || ''}`,
                 { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
               );
               if (res.ok) onDeleted();
