@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ColdProof",
-  description: "Don't just show me what's different. Show me which difference changed the result.",
+  title: "ColdProof — Prove what changed.",
+  description: "Experimental debugging for environment-dependent failures. Don't just show what's different — prove which difference changed the result.",
 };
 
 export default function RootLayout({

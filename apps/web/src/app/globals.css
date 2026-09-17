@@ -81,10 +81,26 @@
   .animate-scale-in,
   .stagger-children > *,
   .reveal,
-  .reveal.revealed {
+  .reveal.revealed,
+  .animate-pulse-node {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
+}
+
+/* ─── Login page extras ───────────────────────────────────────────── */
+@keyframes pulse-node {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+
+.animate-pulse-node {
+  animation: pulse-node 2.4s ease-in-out infinite;
+}
+
+/* Subtle spinning ring (used in loading states) */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
