@@ -60,6 +60,7 @@ const fastify = Fastify({
 
 fastify.register(cors, {
   origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
 });
 
 // Authentication hook
