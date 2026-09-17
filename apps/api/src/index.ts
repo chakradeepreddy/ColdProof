@@ -46,7 +46,7 @@ if (firebaseProjectId && firebaseClientEmail && firebasePrivateKey) {
 // Initialize Groq (optional — if GROQ_API_KEY is absent, AI explanation is skipped)
 let groqClient: Groq | null = null;
 const groqApiKey = process.env.GROQ_API_KEY;
-const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const groqModel = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 if (groqApiKey) {
   groqClient = new Groq({ apiKey: groqApiKey });
   console.log(`Groq client initialized. Model: ${groqModel}`);
