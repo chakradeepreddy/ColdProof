@@ -9,6 +9,7 @@ export default function NewInvestigationPage() {
   const router = useRouter();
   const [command, setCommand] = useState('');
   const [coldproofPath, setColdproofPath] = useState('');
+  const [showAlternative, setShowAlternative] = useState(false);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projectError, setProjectError] = useState('');
   const [token, setToken] = useState<string | null>(null);
@@ -83,14 +84,19 @@ export default function NewInvestigationPage() {
 
   const effectiveCommand = command.trim() || 'your-command';
   const effectivePath = coldproofPath.trim() || '/path/to/ColdProof';
-  const displayCommand = `node ${effectivePath}/cli/dist/index.js investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
-  const fullCliCommand = projectId && token
-    ? `export COLDPROOF_API_URL="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}"\nexport COLDPROOF_TOKEN="${token}"\nexport COLDPROOF_PROJECT_ID="${projectId}"\n${displayCommand}`
+  // Primary: global npm install
+  const primaryDisplayCommand = `coldproof investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
+  // Alternative: direct node invocation (demo fallback)
+  const altDisplayCommand = `node ${effectivePath}/cli/dist/index.js investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
+  const envPrefix = projectId && token
+    ? `export COLDPROOF_API_URL="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}"\nexport COLDPROOF_TOKEN="${token}"\nexport COLDPROOF_PROJECT_ID="${projectId}"`
     : '';
+  const fullCliCommand = envPrefix ? `${envPrefix}\n${primaryDisplayCommand}` : '';
+  const fullAltCommand = envPrefix && coldproofPath.trim() ? `${envPrefix}\n${altDisplayCommand}` : '';
 
-  const copyToClipboard = () => {
-    if (!fullCliCommand) return;
-    navigator.clipboard.writeText(fullCliCommand);
+  const copyToClipboard = (text: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setWaiting(true);
     setTimeout(() => setCopied(false), 2000);
@@ -155,42 +161,26 @@ export default function NewInvestigationPage() {
         <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-3">
           2 · Run ColdProof locally
         </h2>
-        <div className="mb-4">
-          <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
-            ColdProof directory path
-          </label>
-          <div className="flex items-center gap-2 bg-[#08090A] border border-border/60 rounded-lg px-3 py-2 focus-within:border-experiment/50 transition-colors">
-            <input
-              type="text"
-              className="flex-1 bg-transparent text-primary font-mono text-sm focus:outline-none placeholder:text-secondary/40"
-              value={coldproofPath}
-              onChange={(e) => setColdproofPath(e.target.value)}
-              placeholder="/path/to/ColdProof"
-            />
-          </div>
-          <p className="text-xs text-secondary mt-1.5 leading-relaxed">
-            Enter the local path to the ColdProof directory on your machine.
-          </p>
-        </div>
 
-        <div className="text-xs text-secondary mb-3 leading-relaxed space-y-2">
-          <p className="text-sm font-semibold text-primary">Command to run from your project&apos;s root:</p>
+        <div className="text-xs text-secondary mb-3 leading-relaxed">
+          <p className="text-sm font-semibold text-primary mb-1">From your project&apos;s root directory:</p>
+          <p>Install once: <code className="text-primary font-mono bg-elevated px-1 py-0.5 rounded">npm install -g coldproof</code></p>
         </div>
 
         {projectId && token ? (
           <div className="relative mb-3">
             <pre className="bg-[#08090A] border border-border/60 px-4 py-4 rounded-lg font-mono text-xs text-primary overflow-x-auto whitespace-pre-wrap pr-20 leading-relaxed">
-              <span className="text-secondary/50 select-none">$ </span>{displayCommand}
+              <span className="text-secondary/50 select-none">$ </span>{primaryDisplayCommand}
             </pre>
             <button
-              onClick={copyToClipboard}
-              disabled={!coldproofPath.trim()}
+              onClick={() => copyToClipboard(fullCliCommand)}
+              disabled={!fullCliCommand}
               className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1.5 ${
-                !coldproofPath.trim()
+                !fullCliCommand
                   ? 'bg-elevated/50 border-border/30 text-secondary/30 cursor-not-allowed border'
                   : 'bg-elevated hover:bg-border/60 border border-border text-secondary hover:text-primary'
               }`}
-              title={!coldproofPath.trim() ? "Enter ColdProof directory path first" : "Copies the full authenticated command"}
+              title="Copies the full authenticated command (with env vars)"
             >
               {copied ? (
                 <>
@@ -215,17 +205,62 @@ export default function NewInvestigationPage() {
           </div>
         )}
 
-        {!coldproofPath.trim() && (
-          <p className="text-xs text-secondary mb-3">
-            Enter your ColdProof directory path to enable Copy.
+        <div className="text-xs text-secondary leading-relaxed mb-4">
+          <p className="bg-experiment/5 border border-experiment/10 p-2.5 rounded">
+            Run from the <strong className="text-primary">root of the project being investigated</strong>.
+            ColdProof runs locally using Docker for clean execution. Results are uploaded automatically.
           </p>
-        )}
+        </div>
 
-        <div className="text-xs text-secondary leading-relaxed">
-          <p className="mb-2 bg-experiment/5 border border-experiment/10 p-2.5 rounded">
-            The command must be run from the <strong className="text-primary">project being investigated&apos;s root directory</strong>.
-            ColdProof runs locally using Docker for clean execution. Results are uploaded automatically when the investigation completes.
-          </p>
+        {/* Alternative: direct node invocation */}
+        <div className="border-t border-border/40 pt-3">
+          <button
+            onClick={() => setShowAlternative(v => !v)}
+            className="text-xs text-secondary/60 hover:text-secondary flex items-center gap-1 transition-colors"
+          >
+            <svg className={`w-3 h-3 transition-transform ${showAlternative ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+            Alternative: run without global install
+          </button>
+          {showAlternative && (
+            <div className="mt-3">
+              <div className="mb-2">
+                <label className="block text-xs text-secondary/70 mb-1">ColdProof directory path on your machine</label>
+                <div className="flex items-center gap-2 bg-[#08090A] border border-border/60 rounded-lg px-3 py-2 focus-within:border-experiment/50 transition-colors">
+                  <input
+                    type="text"
+                    className="flex-1 bg-transparent text-primary font-mono text-sm focus:outline-none placeholder:text-secondary/40"
+                    value={coldproofPath}
+                    onChange={(e) => setColdproofPath(e.target.value)}
+                    placeholder="/path/to/ColdProof"
+                  />
+                </div>
+              </div>
+              {projectId && token ? (
+                <div className="relative">
+                  <pre className="bg-[#08090A] border border-border/60 px-4 py-3 rounded-lg font-mono text-xs text-primary overflow-x-auto whitespace-pre-wrap pr-20 leading-relaxed">
+                    <span className="text-secondary/50 select-none">$ </span>{altDisplayCommand}
+                  </pre>
+                  <button
+                    onClick={() => copyToClipboard(fullAltCommand)}
+                    disabled={!coldproofPath.trim() || !fullAltCommand}
+                    className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1.5 ${
+                      !coldproofPath.trim()
+                        ? 'bg-elevated/50 border-border/30 text-secondary/30 cursor-not-allowed border'
+                        : 'bg-elevated hover:bg-border/60 border border-border text-secondary hover:text-primary'
+                    }`}
+                    title={!coldproofPath.trim() ? 'Enter ColdProof directory path first' : 'Copy alternative command'}
+                  >
+                    Copy
+                  </button>
+                </div>
+              ) : null}
+              {!coldproofPath.trim() && (
+                <p className="text-xs text-secondary/60 mt-1">Enter your ColdProof directory path to enable Copy.</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Flow visual */}

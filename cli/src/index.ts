@@ -210,10 +210,19 @@ Guidance:
             comparison,
             process.cwd()
           );
-          finalPerturbationResult = perturbationResult;
+          const safePerturbationResult = {
+            ...perturbationResult,
+            candidate: {
+              name: targetCandidate.name,
+              type: targetCandidate.type,
+              observed: targetCandidate.observed
+            }
+          };
+
+          finalPerturbationResult = safePerturbationResult;
 
           // @ts-ignore - attaching to generic candidate object for JSON payload
-          targetCandidate.perturbationResult = perturbationResult;
+          targetCandidate.perturbationResult = safePerturbationResult;
 
           if (perturbationResult.evidence.candidatePerturbed) {
             const pIcon = perturbationResult.evidence.perturbedFailed ? chalk.red('✗ FAIL') : chalk.green('✓ PASS');
