@@ -34,5 +34,6 @@ model Investigation {
   comparison     Json
   candidates     Json
   perturbation   Json?
+  aiExplanation  String?
   createdAt      DateTime        @default(now())
 }

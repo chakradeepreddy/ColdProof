@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import admin from 'firebase-admin';
 import * as dotenv from 'dotenv';
 import cors from '@fastify/cors';
+import Groq from 'groq-sdk';
 
 dotenv.config();
 
@@ -40,6 +41,17 @@ if (firebaseProjectId && firebaseClientEmail && firebasePrivateKey) {
   }
 } else {
   console.warn('Firebase Admin SDK configuration is incomplete. Authentication will fail.');
+}
+
+// Initialize Groq (optional — if GROQ_API_KEY is absent, AI explanation is skipped)
+let groqClient: Groq | null = null;
+const groqApiKey = process.env.GROQ_API_KEY;
+const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+if (groqApiKey) {
+  groqClient = new Groq({ apiKey: groqApiKey });
+  console.log(`Groq client initialized. Model: ${groqModel}`);
+} else {
+  console.log('GROQ_API_KEY not set — AI explanation disabled.');
 }
 
 const fastify = Fastify({
@@ -86,6 +98,77 @@ async function authenticate(request: FastifyRequest, reply: FastifyReply) {
   } catch (error) {
     request.log.error(error);
     return reply.status(401).send({ error: 'Invalid or expired Firebase token' });
+  }
+}
+
+// ------------------------------------------------------------------
+// GROQ EXPLANATION HELPER
+// Generates a plain-English explanation from structured evidence.
+// Never determines causality — only explains what the engine found.
+// ------------------------------------------------------------------
+async function generateExplanation(inv: {
+  command: string;
+  comparison: any;
+  candidates: any[];
+  perturbation: any;
+}): Promise<string | null> {
+  if (!groqClient) return null;
+
+  const { command, comparison, candidates, perturbation } = inv;
+
+  // Build a safe, sanitized summary for the AI — no secrets, no credentials
+  const warmStatus = comparison?.warm?.exitCode === 0 ? 'PASS (exit 0)' : `FAIL (exit ${comparison?.warm?.exitCode})`;
+  const cleanStatus = comparison?.clean?.exitCode === 0 ? 'PASS (exit 0)' : `FAIL (exit ${comparison?.clean?.exitCode})`;
+  const classification = comparison?.classification ?? 'UNKNOWN';
+  const candidateNames = (candidates ?? []).map((c: any) => c.name).join(', ') || 'none';
+
+  // Perturbation summary — use perturbedWarm (actual stored field name)
+  let perturbationSummary = 'No perturbation performed.';
+  if (perturbation) {
+    const candidate = perturbation.candidate?.name ?? 'unknown';
+    const evidence = perturbation.evidence?.classification ?? 'UNKNOWN';
+    const perturbedExitCode = perturbation.perturbedWarm?.exitCode;
+    perturbationSummary = `Candidate "${candidate}" was blocked. Perturbed execution: exit ${perturbedExitCode ?? 'unknown'}. Evidence: ${evidence}.`;
+  }
+
+  // Truncate stderr to avoid sending huge outputs
+  const cleanStderr = (comparison?.clean?.stderr ?? '').slice(0, 600);
+  const warmStderr = (comparison?.warm?.stderr ?? '').slice(0, 400);
+
+  const systemPrompt = `You are a plain-English technical assistant for ColdProof, an environment causality debugger. 
+ColdProof uses controlled perturbation experiments to find which environment differences change a command's outcome.
+Your role is ONLY to explain the evidence ColdProof already collected. 
+Do NOT claim certainty beyond what the evidence supports. 
+Do NOT add fake confidence percentages. 
+Be concise and developer-friendly. Maximum 5 short paragraphs.`;
+
+  const userPrompt = `ColdProof investigation for command: ${JSON.stringify(command)}
+
+Warm (local machine): ${warmStatus}
+Clean (Docker container): ${cleanStatus}
+Behavioral classification: ${classification}
+Environment candidates detected: ${candidateNames}
+Perturbation result: ${perturbationSummary}
+
+Warm stderr (truncated): ${warmStderr || '(none)'}
+Clean stderr (truncated): ${cleanStderr || '(none)'}
+
+Explain: (1) what happened, (2) what was different between environments, (3) what ColdProof tested, (4) what the evidence supports, (5) what the developer should check next. Keep it brief and honest about limitations.`;
+
+  try {
+    const completion = await groqClient.chat.completions.create({
+      model: groqModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: 500,
+      temperature: 0.3,
+    });
+    return completion.choices[0]?.message?.content ?? null;
+  } catch (err: any) {
+    console.error('Groq explanation failed:', err?.message ?? err);
+    return null;
   }
 }
 
@@ -179,8 +262,18 @@ fastify.post('/api/investigations', {
   });
 
   if (!project || project.userId !== userId) {
-    // Return 404 to avoid leaking existence of projects belonging to others
     return reply.status(404).send({ error: 'Project not found' });
+  }
+
+  // Generate AI explanation asynchronously if Groq is configured
+  let aiExplanation: string | null = null;
+  if (groqClient && body.comparison?.behaviorChanged) {
+    aiExplanation = await generateExplanation({
+      command: body.command,
+      comparison: body.comparison,
+      candidates: body.candidates,
+      perturbation: body.perturbationResult,
+    });
   }
 
   const investigation = await prisma.investigation.create({
@@ -190,6 +283,7 @@ fastify.post('/api/investigations', {
       comparison: body.comparison,
       candidates: body.candidates,
       perturbation: body.perturbationResult || null,
+      aiExplanation,
     },
   });
 
@@ -227,12 +321,47 @@ fastify.get('/api/investigations/:id', { preHandler: authenticate }, async (requ
     }
   });
 
-  // Verify existence (ownership is handled by the query)
   if (!investigation) {
     return reply.status(404).send({ error: 'Investigation not found' });
   }
 
   return investigation;
+});
+
+// Regenerate AI explanation for an existing investigation (idempotent)
+fastify.post('/api/investigations/:id/explain', { preHandler: authenticate }, async (request, reply) => {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  if (!groqClient) {
+    return reply.status(503).send({ error: 'AI explanation service not configured.' });
+  }
+
+  const investigation = await prisma.investigation.findFirst({
+    where: { id, project: { userId } }
+  });
+
+  if (!investigation) {
+    return reply.status(404).send({ error: 'Investigation not found' });
+  }
+
+  const explanation = await generateExplanation({
+    command: investigation.command,
+    comparison: investigation.comparison,
+    candidates: investigation.candidates as any[],
+    perturbation: investigation.perturbation,
+  });
+
+  if (!explanation) {
+    return reply.status(500).send({ error: 'Failed to generate explanation.' });
+  }
+
+  const updated = await prisma.investigation.update({
+    where: { id },
+    data: { aiExplanation: explanation },
+  });
+
+  return { aiExplanation: updated.aiExplanation };
 });
 
 // Start the server

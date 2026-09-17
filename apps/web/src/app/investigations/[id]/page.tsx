@@ -4,29 +4,135 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-// Helper for conditional tailwind classes
 function cn(...inputs: any[]) {
   return twMerge(clsx(inputs));
 }
+
+// ------------------------------------------------------------------
+// Sub-components
+// ------------------------------------------------------------------
+
+function ExitCodeBadge({ code }: { code: number | null | undefined }) {
+  const pass = code === 0;
+  return (
+    <span className={cn('text-xs font-bold px-2 py-0.5 rounded', pass ? 'text-pass' : 'text-fail')}>
+      Exit {code ?? '?'}
+    </span>
+  );
+}
+
+function CheckRow({ ok, label, detail }: { ok: boolean; label: string; detail: string }) {
+  return (
+    <li className="flex items-start gap-3 py-3 border-b border-border/30 last:border-0">
+      <div className={cn(
+        'mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold',
+        ok ? 'bg-pass/20 text-pass border border-pass/30' : 'bg-fail/15 text-fail border border-fail/20'
+      )}>
+        {ok ? '✓' : '✗'}
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-primary">{label}</p>
+        <p className="text-xs text-secondary mt-0.5 leading-relaxed">{detail}</p>
+      </div>
+    </li>
+  );
+}
+
+function EvidenceBlock({ evidence, candidateName }: { evidence: any; candidateName?: string }) {
+  const cls = evidence?.classification;
+  const isConfirmed = cls === 'CONFIRMED';
+  const isStrong = cls === 'STRONG_EVIDENCE';
+  const isPositive = isConfirmed || isStrong;
+
+  return (
+    <div className={cn(
+      'rounded-lg border p-5 flex items-start gap-4 mt-5',
+      isConfirmed ? 'bg-pass/8 border-pass/40' :
+      isStrong ? 'bg-evidence/8 border-evidence/40' :
+      'bg-surface border-border'
+    )}>
+      <div className={cn(
+        'p-2 rounded-full border flex-shrink-0',
+        isConfirmed ? 'bg-pass/15 border-pass/40 text-pass' :
+        isStrong ? 'bg-evidence/15 border-evidence/40 text-evidence' :
+        'bg-elevated border-border text-secondary'
+      )}>
+        {isConfirmed ? (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ) : isStrong ? (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )}
+      </div>
+      <div className="min-w-0">
+        <h5 className={cn(
+          'font-bold text-sm tracking-wide uppercase',
+          isConfirmed ? 'text-pass' : isStrong ? 'text-evidence' : 'text-secondary'
+        )}>
+          {cls?.replace(/_/g, ' ') ?? 'UNKNOWN'}
+        </h5>
+        <p className="text-xs text-primary mt-1.5 leading-relaxed">
+          {isConfirmed
+            ? `${candidateName} is confirmed as the causal environmental factor.`
+            : isStrong
+            ? `${candidateName} strongly correlates with the failure. Exit codes matched; failure text varied slightly.`
+            : `${candidateName} was perturbed but did not reproduce the clean failure signature.`}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TerminalPanel({ label, exitCode, output, highlight }: {
+  label: string;
+  exitCode: number | null | undefined;
+  output: string;
+  highlight?: 'pass' | 'fail';
+}) {
+  const borderClass = highlight === 'pass' ? 'border-pass/25' : highlight === 'fail' ? 'border-fail/25' : 'border-border/50';
+  return (
+    <div className={cn('border rounded-lg overflow-hidden flex flex-col bg-[#08090A]', borderClass)}>
+      <div className="px-4 py-2.5 border-b border-border/40 text-xs font-bold text-secondary uppercase tracking-widest flex justify-between items-center bg-surface/20">
+        <span>{label}</span>
+        <ExitCodeBadge code={exitCode} />
+      </div>
+      <pre className="p-4 text-xs font-mono text-primary/75 overflow-auto max-h-52 whitespace-pre-wrap leading-relaxed flex-grow">
+        {output || <span className="text-secondary/50 italic">No output captured</span>}
+      </pre>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// Main page
+// ------------------------------------------------------------------
 
 export default function CausalProofPage() {
   const { user, loading, getToken } = useAuth();
   const router = useRouter();
   const params = useParams();
   const { id } = params;
-  
+
   const [investigation, setInvestigation] = useState<any>(null);
   const [error, setError] = useState('');
   const [loadingData, setLoadingData] = useState(true);
+  const [requestingExplanation, setRequestingExplanation] = useState(false);
+  const [explanationError, setExplanationError] = useState('');
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
+    if (!loading && !user) router.push('/login');
   }, [user, loading, router]);
 
   useEffect(() => {
@@ -35,149 +141,200 @@ export default function CausalProofPage() {
       try {
         const token = await getToken();
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/investigations/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-          const data = await res.json();
-          setInvestigation(data);
+          setInvestigation(await res.json());
         } else {
           setError('Investigation not found or you do not have permission.');
         }
-      } catch (err) {
+      } catch {
         setError('Failed to fetch investigation proof.');
       } finally {
         setLoadingData(false);
       }
     }
-    
-    if (user && !loading) {
-      fetchData();
-    }
+    if (user && !loading) fetchData();
   }, [user, loading, id, getToken]);
+
+  const handleRequestExplanation = async () => {
+    if (!investigation) return;
+    setRequestingExplanation(true);
+    setExplanationError('');
+    try {
+      const token = await getToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/investigations/${investigation.id}/explain`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setInvestigation((prev: any) => ({ ...prev, aiExplanation: data.aiExplanation }));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setExplanationError(err.error || 'AI explanation unavailable.');
+      }
+    } catch {
+      setExplanationError('AI explanation unavailable.');
+    } finally {
+      setRequestingExplanation(false);
+    }
+  };
 
   if (loading || !user) return null;
 
   if (loadingData) {
     return (
       <div className="flex-grow flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-experiment/30 border-t-experiment rounded-full"></div>
+        <div className="w-7 h-7 border-2 border-experiment/30 border-t-experiment rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error || !investigation) {
     return (
-      <div className="p-8 max-w-5xl mx-auto w-full flex-grow">
-        <div className="bg-fail/10 border border-fail/30 p-6 rounded-lg text-center">
-          <h2 className="text-xl font-bold text-fail mb-2">Error</h2>
-          <p className="text-secondary">{error || 'Unknown error occurred.'}</p>
-          <Link href="/" className="inline-block mt-4 text-primary hover:text-experiment underline">Return to Dashboard</Link>
+      <div className="px-6 py-8 max-w-3xl mx-auto w-full">
+        <div className="bg-fail/8 border border-fail/25 p-8 rounded-lg text-center">
+          <h2 className="text-lg font-bold text-fail mb-2">Not Found</h2>
+          <p className="text-secondary text-sm">{error || 'Unknown error.'}</p>
+          <Link href="/" className="inline-block mt-4 text-sm text-experiment hover:text-experiment/80 underline transition-colors">
+            Return to Investigations
+          </Link>
         </div>
       </div>
     );
   }
 
-  const { command, comparison, candidates, perturbation, createdAt } = investigation;
+  const { command, comparison, candidates, perturbation, createdAt, aiExplanation } = investigation;
   const isBehaviorChanged = comparison?.behaviorChanged;
+  const evidenceCls = perturbation?.evidence?.classification;
+
+  // IST timestamp
+  const dateUTC = new Date(createdAt);
+  const dateIST = toZonedTime(dateUTC, 'Asia/Kolkata');
+  const exactIST = format(dateIST, 'd MMM yyyy · h:mm a') + ' IST';
+  const relative = formatDistanceToNow(dateUTC, { addSuffix: true });
+
+  // Badge color for header
+  const headerBadgeCls =
+    evidenceCls === 'CONFIRMED' ? 'bg-pass/10 text-pass border-pass/30' :
+    evidenceCls === 'STRONG_EVIDENCE' ? 'bg-evidence/10 text-evidence border-evidence/40' :
+    evidenceCls === 'NOT_IMPLICATED' ? 'bg-secondary/10 text-secondary border-secondary/30' :
+    !isBehaviorChanged ? 'bg-pass/10 text-pass border-pass/30' :
+    'bg-fail/10 text-fail border-fail/30';
+
+  const headerBadgeLabel =
+    evidenceCls?.replace(/_/g, ' ') ?? (isBehaviorChanged ? 'DIVERGENCE' : 'NO DIVERGENCE');
 
   return (
-    <div className="p-8 max-w-6xl mx-auto w-full">
-      <div className="mb-6">
-        <Link href="/" className="text-secondary hover:text-primary transition-colors text-sm flex items-center mb-6">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          Back to Investigations
-        </Link>
-        
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-primary tracking-tight">Causal Proof</h1>
-              <span className={cn(
-                "px-3 py-1 text-xs font-bold rounded uppercase tracking-widest shadow-sm",
-                perturbation?.evidence?.classification === 'CONFIRMED' ? "bg-pass/10 text-pass border border-pass/30" : 
-                perturbation?.evidence?.classification === 'STRONG_EVIDENCE' ? "bg-evidence/10 text-evidence border border-evidence/40" :
-                perturbation?.evidence?.classification === 'NOT_IMPLICATED' ? "bg-secondary/10 text-secondary border border-secondary/30" :
-                !isBehaviorChanged ? "bg-pass/10 text-pass border border-pass/30" :
-                "bg-fail/10 text-fail border border-fail/30"
-              )}>
-                {perturbation?.evidence?.classification || comparison?.classification || 'UNKNOWN'}
-              </span>
-            </div>
-            <p className="text-secondary text-sm font-medium">
-              Conducted {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
-            </p>
+    <div className="px-6 py-8 max-w-5xl mx-auto w-full">
+
+      {/* Back */}
+      <Link href="/" className="inline-flex items-center text-secondary hover:text-primary text-sm mb-7 transition-colors">
+        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Investigations
+      </Link>
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5 mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-1.5">
+            <h1 className="text-2xl font-bold text-primary tracking-tight">Causal Proof</h1>
+            <span className={cn('px-2.5 py-1 text-xs font-bold rounded uppercase tracking-widest border', headerBadgeCls)}>
+              {headerBadgeLabel}
+            </span>
           </div>
-          <div className="bg-[#08090A] border border-border/50 px-5 py-3 rounded-lg font-mono text-sm text-primary max-w-full overflow-x-auto shadow-inner">
-            <span className="text-secondary select-none">$ </span>{command}
-          </div>
+          <p className="text-secondary text-xs font-medium">
+            <span title={exactIST}>{exactIST}</span>
+            <span className="text-secondary/50 mx-1.5">·</span>
+            <span className="text-secondary/70">{relative}</span>
+          </p>
         </div>
+        <code className="font-mono text-sm bg-[#08090A] border border-border/60 px-4 py-2.5 rounded-lg text-primary self-start shrink-0 max-w-full md:max-w-sm overflow-x-auto whitespace-nowrap">
+          <span className="text-secondary/60 select-none">$ </span>{command}
+        </code>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Warm vs Clean Comparison */}
-        <div className="bg-surface border border-border rounded-lg overflow-hidden flex flex-col shadow-sm">
-          <div className="bg-elevated/50 px-5 py-4 border-b border-border flex justify-between items-center">
-            <h3 className="font-semibold text-primary tracking-wide text-lg">1. Reproduce</h3>
+      {/* Flow: REPRODUCE → PERTURB → PROVE */}
+      <div className="flex items-center gap-2 mb-6 text-xs font-mono text-secondary/50 tracking-widest">
+        <span className={cn('text-xs font-bold uppercase', isBehaviorChanged ? 'text-experiment' : 'text-secondary')}>REPRODUCE</span>
+        <span>→</span>
+        <span className={cn('text-xs font-bold uppercase', perturbation ? 'text-experiment' : 'text-secondary')}>PERTURB</span>
+        <span>→</span>
+        <span className={cn('text-xs font-bold uppercase',
+          evidenceCls === 'CONFIRMED' ? 'text-pass' :
+          evidenceCls === 'STRONG_EVIDENCE' ? 'text-evidence' :
+          'text-secondary'
+        )}>PROVE</span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        {/* 1. Reproduce */}
+        <div className="bg-surface border border-border rounded-lg overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-elevated/30">
+            <h3 className="font-semibold text-primary text-sm tracking-wide">1 · Reproduce</h3>
             {isBehaviorChanged ? (
-              <span className="text-xs text-fail font-bold flex items-center bg-fail/10 px-2.5 py-1 rounded border border-fail/20 shadow-sm uppercase tracking-wider">
-                <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                Divergence Detected
+              <span className="text-xs text-fail font-bold flex items-center gap-1.5 bg-fail/10 px-2 py-0.5 rounded border border-fail/20">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Divergence
               </span>
             ) : (
-              <span className="text-xs text-pass font-bold flex items-center bg-pass/10 px-2.5 py-1 rounded border border-pass/20 shadow-sm uppercase tracking-wider">
-                <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                Behavior Matches
+              <span className="text-xs text-pass font-bold flex items-center gap-1.5 bg-pass/10 px-2 py-0.5 rounded border border-pass/20">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+                Consistent
               </span>
             )}
           </div>
-          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5 flex-grow">
-            <div className="border border-border/50 rounded-lg flex flex-col bg-[#08090A] overflow-hidden shadow-inner">
-              <div className="px-4 py-2.5 border-b border-border/50 text-xs font-bold text-secondary uppercase tracking-widest flex justify-between bg-surface/30">
-                <span>Warm (Local)</span>
-                <span className={comparison?.warm?.exitCode === 0 ? 'text-pass' : 'text-fail'}>Exit {comparison?.warm?.exitCode}</span>
-              </div>
-              <pre className="p-4 text-xs font-mono text-primary/80 overflow-auto flex-grow max-h-56 whitespace-pre-wrap leading-relaxed">
-                {comparison?.warm?.stderr || comparison?.warm?.stdout || 'No output'}
-              </pre>
-            </div>
-            <div className="border border-border/50 rounded-lg flex flex-col bg-[#08090A] overflow-hidden shadow-inner">
-              <div className="px-4 py-2.5 border-b border-border/50 text-xs font-bold text-secondary uppercase tracking-widest flex justify-between bg-surface/30">
-                <span>Clean (Docker)</span>
-                <span className={comparison?.clean?.exitCode === 0 ? 'text-pass' : 'text-fail'}>Exit {comparison?.clean?.exitCode}</span>
-              </div>
-              <pre className="p-4 text-xs font-mono text-primary/80 overflow-auto flex-grow max-h-56 whitespace-pre-wrap leading-relaxed">
-                {comparison?.clean?.stderr || comparison?.clean?.stdout || 'No output'}
-              </pre>
-            </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <TerminalPanel
+              label="Warm (local)"
+              exitCode={comparison?.warm?.exitCode}
+              output={comparison?.warm?.stderr || comparison?.warm?.stdout || ''}
+              highlight={comparison?.warm?.exitCode === 0 ? 'pass' : 'fail'}
+            />
+            <TerminalPanel
+              label="Clean (Docker)"
+              exitCode={comparison?.clean?.exitCode}
+              output={comparison?.clean?.stderr || comparison?.clean?.stdout || ''}
+              highlight={comparison?.clean?.exitCode === 0 ? 'pass' : 'fail'}
+            />
           </div>
         </div>
 
-        {/* Candidate Detection */}
-        <div className="bg-surface border border-border rounded-lg overflow-hidden flex flex-col shadow-sm">
-          <div className="bg-elevated/50 px-5 py-4 border-b border-border flex justify-between items-center">
-            <h3 className="font-semibold text-primary tracking-wide text-lg">2. Candidate Detection</h3>
-            <span className="text-xs text-secondary font-bold uppercase tracking-widest">
-              {candidates?.length || 0} Differences Found
-            </span>
+        {/* 2. Candidates */}
+        <div className="bg-surface border border-border rounded-lg overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-elevated/30">
+            <h3 className="font-semibold text-primary text-sm tracking-wide">2 · Candidate Detection</h3>
+            <span className="text-xs font-bold text-secondary">{candidates?.length ?? 0} found</span>
           </div>
-          <div className="p-5 overflow-auto flex-grow max-h-72">
+          <div className="p-4 overflow-auto max-h-64">
             {!candidates || candidates.length === 0 ? (
-              <div className="text-center py-10 text-secondary text-sm bg-background/30 rounded-lg border border-border/30">
-                No environment differences found between warm and clean execution.
+              <div className="text-center py-8 text-secondary text-sm text-secondary/60">
+                No environment differences detected.
               </div>
             ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 {candidates.map((c: any, i: number) => (
-                  <li key={i} className="border border-border/80 rounded-lg p-4 bg-background/40 hover:bg-elevated/20 transition-colors shadow-sm">
-                    <div className="flex justify-between mb-3 items-center">
-                      <span className="font-mono text-base text-primary font-bold bg-surface px-2 py-0.5 rounded border border-border/50">{c.name}</span>
-                      <span className="text-xs text-secondary font-bold bg-elevated px-2.5 py-1 rounded border border-border/50 uppercase tracking-widest">{c.type}</span>
+                  <li key={i} className="border border-border/60 rounded-lg p-3.5 bg-[#08090A]">
+                    <div className="flex justify-between items-center mb-2.5">
+                      <span className="font-mono text-sm text-primary font-bold">{c.name}</span>
+                      <span className="text-xs text-secondary bg-elevated border border-border/50 px-2 py-0.5 rounded uppercase tracking-wider">{c.type}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm bg-[#08090A] p-3 rounded-md border border-border/40 shadow-inner">
-                      <div><span className="text-secondary text-xs uppercase font-bold tracking-wider block mb-1">Warm</span> <span className="font-mono text-primary/80 truncate block text-xs">{String(c.warmValue)}</span></div>
-                      <div><span className="text-secondary text-xs uppercase font-bold tracking-wider block mb-1">Clean</span> <span className="font-mono text-primary/80 truncate block text-xs">{String(c.cleanValue)}</span></div>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="text-secondary uppercase tracking-wider font-bold block mb-0.5">Warm</span>
+                        <span className="font-mono text-primary/70 break-all">{String(c.warmValue)}</span>
+                      </div>
+                      <div>
+                        <span className="text-secondary uppercase tracking-wider font-bold block mb-0.5">Clean</span>
+                        <span className="font-mono text-primary/70 break-all">{String(c.cleanValue)}</span>
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -187,137 +344,121 @@ export default function CausalProofPage() {
         </div>
       </div>
 
-      {/* Perturbation & Proof */}
-      <div className="bg-surface border border-border rounded-lg overflow-hidden mb-8 shadow-sm">
-        <div className="bg-elevated/50 px-5 py-4 border-b border-border">
-          <h3 className="font-semibold text-primary tracking-wide text-lg">3. Perturbation & Causal Proof</h3>
+      {/* 3. Perturbation & Proof */}
+      <div className="bg-surface border border-border rounded-lg overflow-hidden mb-5">
+        <div className="px-5 py-4 border-b border-border bg-elevated/30">
+          <h3 className="font-semibold text-primary text-sm tracking-wide">3 · Perturbation &amp; Causal Proof</h3>
         </div>
-        <div className="p-6 md:p-8">
+        <div className="p-5 md:p-6">
           {!isBehaviorChanged ? (
-            <div className="text-center py-10 text-secondary bg-background/30 rounded-lg border border-border/30">
-              <p className="font-medium text-primary">No behavioral divergence observed.</p>
-              <p className="mt-1">Perturbation is not required.</p>
+            <div className="text-center py-8 text-secondary/60 text-sm">
+              <p className="font-semibold text-primary mb-1">No behavioral divergence.</p>
+              Perturbation not required.
             </div>
           ) : !perturbation ? (
-            <div className="text-center py-10 bg-background/30 rounded-lg border border-border/30">
-              <div className="w-14 h-14 mx-auto mb-4 text-secondary rounded-full border border-border/80 flex items-center justify-center bg-elevated shadow-sm">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-              </div>
-              <h4 className="text-lg font-bold text-primary mb-2">No Environment Cause Found</h4>
+            <div className="text-center py-8">
+              <h4 className="text-base font-bold text-primary mb-1.5">No Environment Cause Found</h4>
               <p className="text-secondary text-sm max-w-md mx-auto leading-relaxed">
-                ColdProof detected a behavioral divergence but was unable to identify and successfully perturb a supported environment candidate to prove causality.
+                ColdProof detected a behavioral divergence but could not identify a supported environment candidate to perturb and prove causality.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Perturbed execution panel */}
               <div>
-                <h4 className="text-sm font-bold text-secondary uppercase tracking-widest mb-5">Experimental Perturbation</h4>
-                <div className="border border-border/50 rounded-lg bg-[#08090A] overflow-hidden mb-5 shadow-inner">
-                  <div className="px-4 py-2.5 bg-surface/30 border-b border-border/50 text-xs font-bold text-secondary uppercase tracking-widest flex justify-between items-center">
-                    <span className="text-primary/90 font-mono bg-elevated px-2 py-0.5 rounded border border-border/50">Block {perturbation.candidate?.name || 'Candidate'}</span>
-                    <span className={perturbation.result?.exitCode === 0 ? 'text-pass' : 'text-fail'}>Exit {perturbation.result?.exitCode}</span>
-                  </div>
-                  <pre className="p-4 text-xs font-mono text-primary/80 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed">
-                    {perturbation.result?.stderr || perturbation.result?.stdout || 'No output'}
-                  </pre>
-                </div>
+                <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">Perturbed Execution</p>
+                {/* perturbedWarm is the correct field — not "result" */}
+                <TerminalPanel
+                  label={`Block · ${perturbation.candidate?.name ?? 'Candidate'}`}
+                  exitCode={perturbation.perturbedWarm?.exitCode}
+                  output={perturbation.perturbedWarm?.stderr || perturbation.perturbedWarm?.stdout || ''}
+                  highlight={perturbation.perturbedWarm?.exitCode === 0 ? 'pass' : 'fail'}
+                />
               </div>
-              
+
+              {/* Evidence checklist */}
               <div>
-                <h4 className="text-sm font-bold text-secondary uppercase tracking-widest mb-5">Failure Signature Match</h4>
-                <ul className="space-y-4 mb-6">
-                  <li className="flex items-start bg-background/20 p-3 rounded-lg border border-border/30">
-                    <div className={cn("mt-0.5 mr-3 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm", perturbation.evidence?.candidateObserved ? "bg-pass/20 text-pass border border-pass/30" : "bg-fail/20 text-fail border border-fail/30")}>
-                      {perturbation.evidence?.candidateObserved ? '✓' : '✗'}
-                    </div>
-                    <div>
-                      <p className="text-sm text-primary font-bold">Candidate Observed</p>
-                      <p className="text-xs text-secondary mt-0.5">The candidate was accessed during warm execution.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start bg-background/20 p-3 rounded-lg border border-border/30">
-                    <div className={cn("mt-0.5 mr-3 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm", perturbation.evidence?.candidatePerturbed ? "bg-pass/20 text-pass border border-pass/30" : "bg-fail/20 text-fail border border-fail/30")}>
-                      {perturbation.evidence?.candidatePerturbed ? '✓' : '✗'}
-                    </div>
-                    <div>
-                      <p className="text-sm text-primary font-bold">Candidate Perturbed</p>
-                      <p className="text-xs text-secondary mt-0.5">ColdProof successfully blocked or altered the candidate.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start bg-background/20 p-3 rounded-lg border border-border/30">
-                    <div className={cn("mt-0.5 mr-3 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm", perturbation.evidence?.perturbedFailed ? "bg-pass/20 text-pass border border-pass/30" : "bg-fail/20 text-fail border border-fail/30")}>
-                      {perturbation.evidence?.perturbedFailed ? '✓' : '✗'}
-                    </div>
-                    <div>
-                      <p className="text-sm text-primary font-bold">Perturbed Execution Failed</p>
-                      <p className="text-xs text-secondary mt-0.5">The modification caused a failure in the warm environment.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start bg-background/20 p-3 rounded-lg border border-border/30">
-                    <div className={cn("mt-0.5 mr-3 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm", perturbation.evidence?.sameExitCode ? "bg-pass/20 text-pass border border-pass/30" : "bg-fail/20 text-fail border border-fail/30")}>
-                      {perturbation.evidence?.sameExitCode ? '✓' : '✗'}
-                    </div>
-                    <div>
-                      <p className="text-sm text-primary font-bold">Exit Code Match</p>
-                      <p className="text-xs text-secondary mt-0.5">The perturbed failure exit code matches the clean failure exit code.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start bg-background/20 p-3 rounded-lg border border-border/30">
-                    <div className={cn("mt-0.5 mr-3 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm", perturbation.evidence?.failureOutputComparable ? "bg-pass/20 text-pass border border-pass/30" : "bg-fail/20 text-fail border border-fail/30")}>
-                      {perturbation.evidence?.failureOutputComparable ? '✓' : '✗'}
-                    </div>
-                    <div>
-                      <p className="text-sm text-primary font-bold">Textual Signature Match</p>
-                      <p className="text-xs text-secondary mt-0.5">The failure logs (stderr) are comparable between environments.</p>
-                    </div>
-                  </li>
+                <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">Failure Signature Match</p>
+                <ul>
+                  <CheckRow
+                    ok={!!perturbation.evidence?.candidateObserved}
+                    label="Candidate Observed"
+                    detail="The candidate was accessed during warm execution."
+                  />
+                  <CheckRow
+                    ok={!!perturbation.evidence?.candidatePerturbed}
+                    label="Candidate Perturbed"
+                    detail="ColdProof successfully blocked or altered the candidate."
+                  />
+                  <CheckRow
+                    ok={!!perturbation.evidence?.perturbedFailed}
+                    label="Perturbed Execution Failed"
+                    detail="Blocking the candidate caused a failure in the warm environment."
+                  />
+                  <CheckRow
+                    ok={!!perturbation.evidence?.sameExitCode}
+                    label="Exit Code Match"
+                    detail="The perturbed failure exit code matches the clean failure exit code."
+                  />
+                  <CheckRow
+                    ok={!!perturbation.evidence?.failureOutputComparable}
+                    label="Textual Signature Match"
+                    detail="The failure logs (stderr) are comparable between environments."
+                  />
                 </ul>
 
-                <div className={cn(
-                  "p-5 rounded-lg border flex items-start gap-4 transition-all",
-                  perturbation.evidence?.classification === 'CONFIRMED' ? "bg-pass/10 border-pass/40 shadow-[0_0_15px_rgba(111,175,134,0.15)]" : 
-                  perturbation.evidence?.classification === 'STRONG_EVIDENCE' ? "bg-evidence/10 border-evidence/40 shadow-[0_0_15px_rgba(208,162,83,0.15)]" :
-                  "bg-secondary/10 border-secondary/30"
-                )}>
-                  <div className={cn(
-                    "mt-0.5 p-2 rounded-full border",
-                    perturbation.evidence?.classification === 'CONFIRMED' ? "bg-pass/20 border-pass/50 text-pass" :
-                    perturbation.evidence?.classification === 'STRONG_EVIDENCE' ? "bg-evidence/20 border-evidence/50 text-evidence" :
-                    "bg-surface border-border text-secondary"
-                  )}>
-                    {perturbation.evidence?.classification === 'CONFIRMED' ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    ) : perturbation.evidence?.classification === 'STRONG_EVIDENCE' ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    )}
-                  </div>
-                  <div>
-                    <h5 className={cn(
-                      "font-extrabold text-base tracking-wide",
-                      perturbation.evidence?.classification === 'CONFIRMED' ? "text-pass" : 
-                      perturbation.evidence?.classification === 'STRONG_EVIDENCE' ? "text-evidence" :
-                      "text-secondary"
-                    )}>
-                      {perturbation.evidence?.classification === 'CONFIRMED' ? "CAUSALITY CONFIRMED" : 
-                       perturbation.evidence?.classification === 'STRONG_EVIDENCE' ? "STRONG EVIDENCE" : 
-                       "NOT IMPLICATED"}
-                    </h5>
-                    <p className="text-sm text-primary mt-1.5 leading-relaxed">
-                      {perturbation.evidence?.classification === 'CONFIRMED' 
-                        ? `The environment candidate ${perturbation.candidate?.name} is confirmed as the cause of the failure.` 
-                        : perturbation.evidence?.classification === 'STRONG_EVIDENCE'
-                        ? `The environment candidate ${perturbation.candidate?.name} strongly correlates to the failure, but text signatures varied slightly.`
-                        : `The environment candidate ${perturbation.candidate?.name} was perturbed but did not reproduce the clean failure signature.`}
-                    </p>
-                  </div>
-                </div>
+                <EvidenceBlock
+                  evidence={perturbation.evidence}
+                  candidateName={perturbation.candidate?.name}
+                />
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* 4. Plain-English Explanation (Groq) */}
+      <div className="bg-surface border border-border rounded-lg overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-elevated/30 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-primary text-sm tracking-wide">Plain-English Explanation</h3>
+            <p className="text-xs text-secondary mt-0.5">Generated from the recorded evidence</p>
+          </div>
+          {!aiExplanation && !explanationError && (
+            <button
+              onClick={handleRequestExplanation}
+              disabled={requestingExplanation}
+              className="text-xs font-medium text-experiment hover:text-experiment/80 border border-experiment/30 hover:border-experiment/60 px-3 py-1.5 rounded transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {requestingExplanation ? (
+                <>
+                  <span className="w-3 h-3 border border-experiment/30 border-t-experiment rounded-full animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Generate
+                </>
+              )}
+            </button>
+          )}
+        </div>
+        <div className="p-5">
+          {aiExplanation ? (
+            <p className="text-sm text-primary/85 leading-relaxed whitespace-pre-wrap">{aiExplanation}</p>
+          ) : explanationError ? (
+            <p className="text-sm text-secondary italic">{explanationError}</p>
+          ) : (
+            <p className="text-sm text-secondary/60 italic">
+              Click &ldquo;Generate&rdquo; to produce a plain-English explanation of the investigation evidence.
+            </p>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }
