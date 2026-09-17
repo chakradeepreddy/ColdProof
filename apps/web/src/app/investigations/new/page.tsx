@@ -8,6 +8,7 @@ export default function NewInvestigationPage() {
   const { user, loading, getToken } = useAuth();
   const router = useRouter();
   const [command, setCommand] = useState('');
+  const [coldproofPath, setColdproofPath] = useState('');
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projectError, setProjectError] = useState('');
   const [token, setToken] = useState<string | null>(null);
@@ -81,7 +82,8 @@ export default function NewInvestigationPage() {
   }, [waiting, projectId, token, router]);
 
   const effectiveCommand = command.trim() || 'your-command';
-  const displayCommand = `node /path/to/ColdProof/cli/dist/index.js investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
+  const effectivePath = coldproofPath.trim() || '/path/to/ColdProof';
+  const displayCommand = `node ${effectivePath}/cli/dist/index.js investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
   const fullCliCommand = projectId && token
     ? `export COLDPROOF_API_URL="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}"\nexport COLDPROOF_TOKEN="${token}"\nexport COLDPROOF_PROJECT_ID="${projectId}"\n${displayCommand}`
     : '';
@@ -154,33 +156,42 @@ export default function NewInvestigationPage() {
         <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-3">
           2 · Run ColdProof locally
         </h2>
-        <div className="text-xs text-secondary mb-4 leading-relaxed space-y-2">
-          <ol className="list-decimal list-inside space-y-1.5 ml-1">
-            <li>Open Terminal.</li>
-            <li>Navigate to the <strong className="text-primary">root directory of the project being investigated</strong>.</li>
-            <li>Replace both placeholders before running:
-              <ul className="list-disc list-inside ml-5 mt-1 space-y-1 text-secondary/90">
-                <li><code className="text-primary bg-[#08090A] border border-border/60 px-1 py-0.5 rounded">/path/to/ColdProof</code> → your actual ColdProof directory path</li>
-                <li><code className="text-primary bg-[#08090A] border border-border/60 px-1 py-0.5 rounded">&quot;your-command&quot;</code> → the failing command you entered above</li>
-              </ul>
-            </li>
-            <li>Run the resulting command.</li>
-          </ol>
-          <p className="mt-3 text-secondary/80 bg-experiment/5 border border-experiment/10 p-2.5 rounded">
-            ColdProof performs Warm → Clean (Docker) → Compare → Perturb → Prove locally.
-            When the investigation finishes, the structured results are uploaded automatically and appear in the web dashboard.
+        <div className="mb-4">
+          <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
+            ColdProof directory path
+          </label>
+          <div className="flex items-center gap-2 bg-[#08090A] border border-border/60 rounded-lg px-3 py-2 focus-within:border-experiment/50 transition-colors">
+            <input
+              type="text"
+              className="flex-1 bg-transparent text-primary font-mono text-sm focus:outline-none placeholder:text-secondary/40"
+              value={coldproofPath}
+              onChange={(e) => setColdproofPath(e.target.value)}
+              placeholder="/path/to/ColdProof"
+            />
+          </div>
+          <p className="text-xs text-secondary mt-1.5 leading-relaxed">
+            Enter the local path to the ColdProof directory on your machine.
           </p>
         </div>
 
+        <div className="text-xs text-secondary mb-3 leading-relaxed space-y-2">
+          <p className="text-sm font-semibold text-primary">Command to run from your project&apos;s root:</p>
+        </div>
+
         {projectId && token ? (
-          <div className="relative">
+          <div className="relative mb-3">
             <pre className="bg-[#08090A] border border-border/60 px-4 py-4 rounded-lg font-mono text-xs text-primary overflow-x-auto whitespace-pre-wrap pr-20 leading-relaxed">
               <span className="text-secondary/50 select-none">$ </span>{displayCommand}
             </pre>
             <button
               onClick={copyToClipboard}
-              className="absolute top-2.5 right-2.5 bg-elevated hover:bg-border/60 border border-border text-secondary hover:text-primary px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1.5"
-              title="Copies the full authenticated command"
+              disabled={!coldproofPath.trim()}
+              className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1.5 ${
+                !coldproofPath.trim()
+                  ? 'bg-elevated/50 border-border/30 text-secondary/30 cursor-not-allowed border'
+                  : 'bg-elevated hover:bg-border/60 border border-border text-secondary hover:text-primary'
+              }`}
+              title={!coldproofPath.trim() ? "Enter ColdProof directory path first" : "Copies the full authenticated command"}
             >
               {copied ? (
                 <>
@@ -200,10 +211,23 @@ export default function NewInvestigationPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-[#08090A] border border-border/50 p-4 rounded-lg text-secondary/50 text-xs">
+          <div className="bg-[#08090A] border border-border/50 p-4 rounded-lg text-secondary/50 text-xs mb-3">
             Setting up workspace context...
           </div>
         )}
+
+        {!coldproofPath.trim() && (
+          <p className="text-xs text-secondary mb-3">
+            Enter your ColdProof directory path to enable Copy.
+          </p>
+        )}
+
+        <div className="text-xs text-secondary leading-relaxed">
+          <p className="mb-2 bg-experiment/5 border border-experiment/10 p-2.5 rounded">
+            The command must be run from the <strong className="text-primary">project being investigated&apos;s root directory</strong>.
+            ColdProof runs locally using Docker for clean execution. Results are uploaded automatically when the investigation completes.
+          </p>
+        </div>
 
         {/* Flow visual */}
         <div className="mt-4 flex items-center gap-2 text-xs font-mono tracking-widest">
