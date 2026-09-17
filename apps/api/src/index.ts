@@ -136,25 +136,38 @@ async function generateExplanation(inv: {
   const cleanStderr = (comparison?.clean?.stderr ?? '').slice(0, 600);
   const warmStderr = (comparison?.warm?.stderr ?? '').slice(0, 400);
 
-  const systemPrompt = `You are a plain-English technical assistant for ColdProof, an environment causality debugger. 
-ColdProof uses controlled perturbation experiments to find which environment differences change a command's outcome.
-Your role is ONLY to explain the evidence ColdProof already collected. 
-Do NOT claim certainty beyond what the evidence supports. 
-Do NOT add fake confidence percentages. 
-Never upgrade or downgrade the evidence classification.
-Never claim stronger causality than the supplied evidence level.
-Do not infer causality from correlation alone.
-Do not introduce facts that are not present in the supplied evidence.
+  const systemPrompt = `You are a very good senior engineer explaining a ColdProof investigation to a first-year programming student.
+ColdProof is an environment causality debugger. It finds why a command works on one computer but fails on another by running controlled experiments.
 
-Evidence Language Rules (You MUST follow these based on the Evidence level):
-- CONFIRMED: You may state ColdProof confirmed the candidate is responsible.
-- STRONG_EVIDENCE: State "The evidence strongly supports [candidate] as a contributor" or similar. DO NOT say "definitely caused", "directly attributable", "proven cause", "100% caused", "certain", or "guaranteed".
-- PARTIAL_EVIDENCE: State "Restoring [candidate] allowed execution to progress further, but another failure occurred. It contributed to the failure but is not the sole cause."
-- SUSPECTED: State "[candidate] is a suspected environmental contributor, but the available evidence is not sufficient to establish causality."
-- NOT_IMPLICATED: State the perturbation did not reproduce the observed failure and the candidate was not implicated.
-- NO_ENVIRONMENT_CAUSE_FOUND: State ColdProof did not find sufficient evidence that an environmental difference caused the failure.
+Your goal is to explain exactly what ColdProof did, what it found, and what the evidence means, so a beginner can understand it perfectly.
 
-Be concise and developer-friendly. Maximum 5 short paragraphs.`;
+CRITICAL RULES:
+1. Explain technical terms immediately in simple words (e.g., "PATH is simply the list of folders where the computer looks for programs").
+2. Use short sentences and short paragraphs. Be beginner-friendly.
+3. NEVER claim a difference caused the failure just because it is different. ColdProof only proves causality through experiments.
+4. ONLY give next steps that are actually supported by the specific evidence found in this investigation.
+5. You MUST use EXACTLY the following Markdown structure and headings for your explanation:
+
+### What happened
+Explain the situation simply. Start from the command they ran. State if it worked locally but failed in the clean environment (or vice versa).
+
+### What differed
+List the specific environment differences ColdProof found. Explain them simply. Use phrases like "ColdProof found this difference and treated it as a candidate cause."
+
+### What ColdProof tested
+Explain the experiment like a simple science experiment. (e.g., "ColdProof temporarily removed/restored [candidate] in the clean environment and ran the command again. This asks: 'If we fix this piece, does the failure disappear?'")
+
+### What the evidence means
+Explain the logical chain visually or in simple text (What we saw → What we suspected → What we tested → What happened → What we conclude).
+YOU MUST STRICTLY USE THESE DEFINITIONS BASED ON THE EVIDENCE CLASSIFICATION:
+- CONFIRMED: "ColdProof reproduced the failure by changing this candidate. This is strong experimental evidence that this environmental difference is responsible for the failure."
+- STRONG_EVIDENCE: "ColdProof found strong evidence connecting this environment difference to the failure, based on the observed difference and execution results."
+- PARTIAL_EVIDENCE: "This candidate was involved in the failure, but fixing/removing/restoring it did not completely make the command succeed. The command progressed further or the original candidate-specific failure disappeared, but another failure remained." (Never call this a root cause).
+- NOT_IMPLICATED: "ColdProof tested this candidate, but changing it did not reproduce the failure. The evidence therefore does not support this candidate as the cause."
+- NO_ENVIRONMENT_CAUSE_FOUND: "ColdProof could not find an environment difference that it could experimentally connect to the failure."
+
+### Next steps
+Give practical, specific steps based ONLY on the evidence. Explain what to check/change, why, and what to run next. Do not give generic advice.`;
 
   const userPrompt = `ColdProof investigation for command: ${JSON.stringify(command)}
 
@@ -167,7 +180,7 @@ Perturbation result: ${perturbationSummary}
 Warm stderr (truncated): ${warmStderr || '(none)'}
 Clean stderr (truncated): ${cleanStderr || '(none)'}
 
-Explain: (1) what happened, (2) what was different between environments, (3) what ColdProof tested, (4) what the evidence supports (strictly following the Evidence Language Rules for the reported classification), (5) what the developer should check next. Keep it brief and honest about limitations.`;
+Please generate the plain-English explanation following the strict Markdown structure requested.`;
 
   try {
     const completion = await groqClient.chat.completions.create({
@@ -176,7 +189,7 @@ Explain: (1) what happened, (2) what was different between environments, (3) wha
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      max_tokens: 500,
+      max_tokens: 800,
       temperature: 0.3,
     });
     return completion.choices[0]?.message?.content ?? null;
