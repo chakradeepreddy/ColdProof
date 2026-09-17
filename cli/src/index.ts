@@ -24,13 +24,13 @@ program
   .action(async (command: string, options: { clean?: boolean }) => {
     const mode = options.clean ? chalk.blue('clean') : chalk.cyan('warm');
     const spinner = ora(`Executing (${mode}): ${chalk.cyan(command)}`).start();
-    
+
     try {
       const result = options.clean
         ? await executeCleanCommand(command, process.cwd())
         : await executeCommand(command);
 
-      
+
       if (result.exitCode === 0) {
         spinner.succeed(`Execution successful (${result.durationMs.toFixed(2)}ms)`);
       } else {
@@ -41,7 +41,7 @@ program
       console.log(chalk.bold.blue('--- STDOUT ---'));
       console.log(result.stdout || chalk.gray('(empty)'));
       console.log();
-      
+
       if (result.stderr) {
         console.log(chalk.bold.red('--- STDERR ---'));
         console.log(result.stderr);
@@ -146,7 +146,7 @@ Guidance:
 
     const comparison = compareExecutions(warmResult, cleanResult);
     console.log(chalk.gray('\n3. Behavioral comparison'));
-    
+
     if (comparison.behaviorChanged) {
       console.log(`   ${chalk.yellow('⚠ ' + comparison.classification)}`);
     } else {
@@ -188,95 +188,113 @@ Guidance:
       }
 
       console.log(chalk.gray('5. Perturbation\n'));
-      
-      const executableCandidates = detectedCandidates.filter(c => (c.type === 'EXECUTABLE' || c.type === 'PROJECT_LOCAL_EXECUTABLE') && c.observed);
-      if (executableCandidates.length > 0) {
-        // Perturb the first executable candidate for MVP
-        const targetCandidate = executableCandidates[0];
-        console.log(`   Candidate:\n   ${chalk.cyan(targetCandidate.name)}`);
-        
-        const perturbationResult = await perturbCandidate(
-          targetCandidate,
-          command,
-          warmResult,
-          cleanResult,
-          comparison,
-          process.cwd()
-        );
-        finalPerturbationResult = perturbationResult;
 
-        if (perturbationResult.evidence.candidatePerturbed) {
-          const pIcon = perturbationResult.evidence.perturbedFailed ? chalk.red('✗ FAIL') : chalk.green('✓ PASS');
-          console.log(`\n   Perturbed execution:\n   ${pIcon}`);
+      const testableCandidates = detectedCandidates
+        .filter(c => c.observed)
+        .sort((a, b) => {
+          if (a.type === 'PROJECT_LOCAL_EXECUTABLE' && b.type !== 'PROJECT_LOCAL_EXECUTABLE') return -1;
+          if (b.type === 'PROJECT_LOCAL_EXECUTABLE' && a.type !== 'PROJECT_LOCAL_EXECUTABLE') return 1;
+          return 0;
+        });
 
-          console.log(chalk.gray('\n6. Evidence\n'));
-          
-          let eIcon = '';
-          switch (perturbationResult.evidence.classification) {
-            case 'CONFIRMED': eIcon = chalk.green.bold('CONFIRMED'); break;
-            case 'STRONG_EVIDENCE': eIcon = chalk.green.bold('STRONG_EVIDENCE'); break;
-            case 'PARTIAL_EVIDENCE': eIcon = chalk.yellow.bold('PARTIAL_EVIDENCE'); break;
-            case 'NOT_IMPLICATED': eIcon = chalk.yellow.bold('NOT_IMPLICATED'); break;
-            default: eIcon = chalk.gray.bold('UNABLE_TO_TEST'); break;
-          }
+      if (testableCandidates.length > 0) {
+        for (let i = 0; i < testableCandidates.length; i++) {
+          const targetCandidate = testableCandidates[i];
+          console.log(`   Candidate (${i + 1}/${testableCandidates.length}):\n   ${chalk.cyan(targetCandidate.name)}`);
 
-          console.log(`   ${eIcon}\n`);
-          console.log(`   ${perturbationResult.evidence.candidateObserved ? '✓' : '✗'} ${targetCandidate.name} was observed during warm execution`);
+          const perturbationResult = await perturbCandidate(
+            targetCandidate,
+            command,
+            warmResult,
+            cleanResult,
+            comparison,
+            process.cwd()
+          );
+          finalPerturbationResult = perturbationResult;
 
-          if (targetCandidate.type === 'PROJECT_LOCAL_EXECUTABLE') {
-            console.log(`   ${perturbationResult.evidence.candidatePerturbed ? '✓' : '✗'} ${targetCandidate.name} was restored in clean execution`);
-            if (perturbationResult.evidence.classification === 'PARTIAL_EVIDENCE') {
-              console.log(`   ✓ original candidate-specific failure disappeared`);
-              console.log(`   ✓ execution progressed further`);
-              console.log(`   ✓ new failure occurred`);
+          // @ts-ignore - attaching to generic candidate object for JSON payload
+          targetCandidate.perturbationResult = perturbationResult;
+
+          if (perturbationResult.evidence.candidatePerturbed) {
+            const pIcon = perturbationResult.evidence.perturbedFailed ? chalk.red('✗ FAIL') : chalk.green('✓ PASS');
+            console.log(`\n   Perturbed execution:\n   ${pIcon}`);
+
+            console.log(chalk.gray('\n6. Evidence\n'));
+
+            let eIcon = '';
+            switch (perturbationResult.evidence.classification) {
+              case 'CONFIRMED': eIcon = chalk.green.bold('CONFIRMED'); break;
+              case 'STRONG_EVIDENCE': eIcon = chalk.green.bold('STRONG_EVIDENCE'); break;
+              case 'PARTIAL_EVIDENCE': eIcon = chalk.yellow.bold('PARTIAL_EVIDENCE'); break;
+              case 'NOT_IMPLICATED': eIcon = chalk.yellow.bold('NOT_IMPLICATED'); break;
+              default: eIcon = chalk.gray.bold('UNABLE_TO_TEST'); break;
+            }
+
+            console.log(`   ${eIcon}\n`);
+            console.log(`   ${perturbationResult.evidence.candidateObserved ? '✓' : '✗'} ${targetCandidate.name} was observed during warm execution`);
+
+            if (targetCandidate.type === 'PROJECT_LOCAL_EXECUTABLE') {
+              console.log(`   ${perturbationResult.evidence.candidatePerturbed ? '✓' : '✗'} ${targetCandidate.name} was restored in clean execution`);
+              if (perturbationResult.evidence.classification === 'PARTIAL_EVIDENCE') {
+                console.log(`   ✓ original missing-executable failure disappeared`);
+                console.log(`   ✓ execution progressed further`);
+                console.log(`   ✓ execution still failed for another reason`);
+              } else {
+                console.log(`   ${!perturbationResult.evidence.perturbedFailed ? '✓' : '✗'} perturbed execution succeeded`);
+              }
             } else {
-              console.log(`   ${!perturbationResult.evidence.perturbedFailed ? '✓' : '✗'} perturbed execution succeeded`);
+              console.log(`   ${perturbationResult.evidence.candidatePerturbed ? '✓' : '✗'} ${targetCandidate.name} was blocked in warm execution`);
+              console.log(`   ${perturbationResult.evidence.perturbedFailed ? '✓' : '✗'} perturbed execution failed`);
+              console.log(`   ${perturbationResult.evidence.sameExitCode ? '✓' : '✗'} same exit code boundary as clean failure`);
+              console.log(`   ${perturbationResult.evidence.failureOutputComparable ? '✓' : '✗'} textual failure signature matched\n`);
             }
-          } else {
-            console.log(`   ${perturbationResult.evidence.candidatePerturbed ? '✓' : '✗'} ${targetCandidate.name} was blocked in warm execution`);
-            console.log(`   ${perturbationResult.evidence.perturbedFailed ? '✓' : '✗'} perturbed execution failed`);
-            console.log(`   ${perturbationResult.evidence.sameExitCode ? '✓' : '✗'} same exit code boundary as clean failure`);
-            console.log(`   ${perturbationResult.evidence.failureOutputComparable ? '✓' : '✗'} textual failure signature matched\n`);
-          }
 
-          if (targetCandidate.type === 'PROJECT_LOCAL_EXECUTABLE') {
-            if (perturbationResult.evidence.perturbedFailed) {
-              console.log(chalk.gray('\n--- CLEAN STDERR ---'));
-              console.log(cleanResult.stderr);
-              console.log(chalk.gray('--- PERTURBED STDERR ---'));
-              console.log(perturbationResult.perturbedWarm?.stderr || '(empty)');
+            if (targetCandidate.type === 'PROJECT_LOCAL_EXECUTABLE') {
+              if (perturbationResult.evidence.perturbedFailed) {
+                console.log(chalk.gray('\n--- CLEAN STDERR ---'));
+                console.log(cleanResult.stderr);
+                console.log(chalk.gray('--- PERTURBED STDERR ---'));
+                console.log(perturbationResult.perturbedWarm?.stderr || '(empty)');
+              }
+            } else {
+              if (!perturbationResult.evidence.failureOutputComparable) {
+                console.log(chalk.gray('\n--- CLEAN STDERR ---'));
+                console.log(cleanResult.stderr);
+                console.log(chalk.gray('--- PERTURBED STDERR ---'));
+                console.log(perturbationResult.perturbedWarm?.stderr);
+              }
             }
-          } else {
-            if (!perturbationResult.evidence.failureOutputComparable) {
-              console.log(chalk.gray('\n--- CLEAN STDERR ---'));
-              console.log(cleanResult.stderr);
-              console.log(chalk.gray('--- PERTURBED STDERR ---'));
-              console.log(perturbationResult.perturbedWarm?.stderr);
-            }
-          }
 
-          console.log(chalk.gray('\n7. Conclusion\n'));
-          if (perturbationResult.evidence.classification === 'CONFIRMED' || perturbationResult.evidence.classification === 'STRONG_EVIDENCE') {
-             console.log(`   ${chalk.cyan(targetCandidate.name)} is supported as the environmental cause`);
-             console.log('   of the observed warm/clean behavioral divergence.');
-             if (perturbationResult.evidence.classification === 'STRONG_EVIDENCE') {
-                console.log(`\n   ${chalk.yellow('Note:')} The exit codes match but the failure text differs.`);
-                console.log(`   ColdProof classifies this as STRONG_EVIDENCE rather than CONFIRMED.`);
-             }
-          } else if (perturbationResult.evidence.classification === 'PARTIAL_EVIDENCE') {
-             console.log(`   ${chalk.cyan(targetCandidate.name)} contributed to the observed failure,`);
-             console.log('   but ColdProof cannot establish it as the sole/root cause.');
-             console.log(`\n   ${chalk.yellow('Note:')} The original failure disappeared and execution progressed further,`);
-             console.log('   but a new failure occurred.');
+            console.log(chalk.gray('\n7. Conclusion\n'));
+            const cls = perturbationResult.evidence.classification;
+
+            if (cls === 'CONFIRMED' || cls === 'STRONG_EVIDENCE') {
+               if (cls === 'CONFIRMED') {
+                 console.log(`   ${chalk.cyan(targetCandidate.name)}: Environmental cause confirmed.`);
+               } else {
+                 console.log(`   ${chalk.cyan(targetCandidate.name)}: Strong evidence supports this environmental cause.`);
+                 console.log(`\n   ${chalk.yellow('Note:')} The exit codes match but the failure text differs.`);
+                 console.log(`   ColdProof classifies this as STRONG_EVIDENCE rather than CONFIRMED.`);
+               }
+               console.log(chalk.green(`\n   Stopping investigation: Strong existing evidence established.`));
+               break;
+            } else if (cls === 'PARTIAL_EVIDENCE') {
+               console.log(`   ${chalk.cyan(targetCandidate.name)}: This candidate contributed to the observed failure, but the sole/root cause was not isolated.`);
+               console.log(`\n   ${chalk.yellow('Note:')} The original failure disappeared and execution progressed further,`);
+               console.log('   but a new failure occurred.');
+               console.log(chalk.yellow(`\n   Continuing investigation.`));
+            } else {
+               console.log(`   ${chalk.cyan(targetCandidate.name)}: This candidate is not supported as the environmental cause.`);
+               console.log(chalk.gray(`\n   Continuing investigation.`));
+            }
           } else {
-             console.log(`   ${chalk.cyan(targetCandidate.name)} is ${chalk.yellow('not supported')} as the environmental cause.`);
+            console.log('   Perturbation failed or was not applied.');
+            console.log(chalk.gray(`\n   Continuing investigation.`));
           }
-        } else {
-          console.log('   Perturbation failed or was not applied.');
+          console.log('\n----------------------------------------\n');
         }
-
       } else {
-        console.log('   No supported executable candidates found for perturbation.');
+        console.log('   No testable environment candidates found for perturbation.');
         console.log('   Causality not established.');
       }
     } else {
@@ -287,7 +305,7 @@ Guidance:
     // Attempt to upload to the backend if configured
     const token = process.env.COLDPROOF_TOKEN;
     const projectId = process.env.COLDPROOF_PROJECT_ID;
-    
+
     if (token && projectId && comparison.behaviorChanged) {
       console.log(chalk.gray('\n8. Telemetry\n'));
       const spinner = ora('Uploading investigation results to ColdProof Cloud...').start();

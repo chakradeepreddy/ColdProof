@@ -146,8 +146,7 @@ export default function NewInvestigationPage() {
           />
         </div>
         <p className="text-xs text-secondary mt-2.5 leading-relaxed">
-          Run this command from your project&apos;s root directory. ColdProof supports Node.js projects (npm/yarn/pnpm) out of the box.
-          Other languages may work if their runtime is available in the Docker container.
+          Provide the exact command from your normal development or CI workflow that reproduces the issue (e.g., <code className="text-primary font-mono bg-elevated px-1 py-0.5 rounded">npm run build</code>, <code className="text-primary font-mono bg-elevated px-1 py-0.5 rounded">npm run test</code>, or <code className="text-primary font-mono bg-elevated px-1 py-0.5 rounded">npm run typecheck</code>). You don't need to know what's causing the failure. ColdProof compares the environments and tests candidate differences to find evidence for the cause.
         </p>
       </div>
 

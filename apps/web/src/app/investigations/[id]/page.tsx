@@ -353,70 +353,97 @@ export default function CausalProofPage() {
           <h3 className="font-semibold text-primary text-sm tracking-wide">3 · Perturbation &amp; Causal Proof</h3>
         </div>
         <div className="p-5 md:p-6">
-          {!isBehaviorChanged ? (
-            <div className="text-center py-8 text-secondary/60 text-sm">
-              <p className="font-semibold text-primary mb-1">No behavioral divergence.</p>
-              Perturbation not required.
-            </div>
-          ) : !perturbation ? (
-            <div className="text-center py-8">
-              <h4 className="text-base font-bold text-primary mb-1.5">No Environment Cause Found</h4>
-              <p className="text-secondary text-sm max-w-md mx-auto leading-relaxed">
-                ColdProof detected a behavioral divergence but could not identify a supported environment candidate to perturb and prove causality.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Perturbed execution panel */}
-              <div>
-                <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">Perturbed Execution</p>
-                {/* perturbedWarm is the correct field — not "result" */}
-                <TerminalPanel
-                  label={`Block · ${perturbation.candidate?.name ?? 'Candidate'}`}
-                  exitCode={perturbation.perturbedWarm?.exitCode}
-                  output={perturbation.perturbedWarm?.stderr || perturbation.perturbedWarm?.stdout || ''}
-                  highlight={perturbation.perturbedWarm?.exitCode === 0 ? 'pass' : 'fail'}
-                />
-              </div>
+          {(() => {
+            if (!isBehaviorChanged) {
+              return (
+                <div className="text-center py-8 text-secondary/60 text-sm">
+                  <p className="font-semibold text-primary mb-1">No behavioral divergence.</p>
+                  Perturbation not required.
+                </div>
+              );
+            }
 
-              {/* Evidence checklist */}
-              <div>
-                <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">Failure Signature Match</p>
-                <ul>
-                  <CheckRow
-                    ok={!!perturbation.evidence?.candidateObserved}
-                    label="Candidate Observed"
-                    detail="The candidate was accessed during warm execution."
-                  />
-                  <CheckRow
-                    ok={!!perturbation.evidence?.candidatePerturbed}
-                    label="Candidate Perturbed"
-                    detail="ColdProof successfully blocked or altered the candidate."
-                  />
-                  <CheckRow
-                    ok={!!perturbation.evidence?.perturbedFailed}
-                    label="Perturbed Execution Failed"
-                    detail="Blocking the candidate caused a failure in the warm environment."
-                  />
-                  <CheckRow
-                    ok={!!perturbation.evidence?.sameExitCode}
-                    label="Exit Code Match"
-                    detail="The perturbed failure exit code matches the clean failure exit code."
-                  />
-                  <CheckRow
-                    ok={!!perturbation.evidence?.failureOutputComparable}
-                    label="Textual Signature Match"
-                    detail="The failure logs (stderr) are comparable between environments."
-                  />
-                </ul>
+            const testedCandidates = (candidates || []).filter((c: any) => !!c.perturbationResult).map((c: any) => c.perturbationResult);
+            if (testedCandidates.length === 0 && perturbation) {
+              testedCandidates.push(perturbation);
+            }
 
-                <EvidenceBlock
-                  evidence={perturbation.evidence}
-                  candidateName={perturbation.candidate?.name}
-                />
+            if (testedCandidates.length === 0) {
+              return (
+                <div className="text-center py-8">
+                  <h4 className="text-base font-bold text-primary mb-1.5">No Environment Cause Found</h4>
+                  <p className="text-secondary text-sm max-w-md mx-auto leading-relaxed">
+                    ColdProof detected a behavioral divergence but could not identify a supported environment candidate to perturb and prove causality.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-12">
+                {testedCandidates.map((pert: any, index: number) => {
+                  const candidateName = pert.candidate?.name ?? 'Candidate';
+                  return (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+                      {index > 0 && (
+                        <div className="absolute -top-6 left-0 right-0 border-t border-border/50" />
+                      )}
+
+                      {/* Perturbed execution panel */}
+                      <div>
+                        <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">
+                          {testedCandidates.length > 1 ? `Tested Candidate ${index + 1}` : 'Perturbed Execution'}
+                        </p>
+                        <TerminalPanel
+                          label={`Block · ${candidateName}`}
+                          exitCode={pert.perturbedWarm?.exitCode}
+                          output={pert.perturbedWarm?.stderr || pert.perturbedWarm?.stdout || ''}
+                          highlight={pert.perturbedWarm?.exitCode === 0 ? 'pass' : 'fail'}
+                        />
+                      </div>
+
+                      {/* Evidence checklist */}
+                      <div>
+                        <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">Failure Signature Match</p>
+                        <ul>
+                          <CheckRow
+                            ok={!!pert.evidence?.candidateObserved}
+                            label="Candidate Observed"
+                            detail="The candidate was accessed during warm execution."
+                          />
+                          <CheckRow
+                            ok={!!pert.evidence?.candidatePerturbed}
+                            label="Candidate Perturbed"
+                            detail="ColdProof successfully blocked or altered the candidate."
+                          />
+                          <CheckRow
+                            ok={!!pert.evidence?.perturbedFailed}
+                            label="Perturbed Execution Failed"
+                            detail="Blocking the candidate caused a failure in the warm environment."
+                          />
+                          <CheckRow
+                            ok={!!pert.evidence?.sameExitCode}
+                            label="Exit Code Match"
+                            detail="The perturbed failure exit code matches the clean failure exit code."
+                          />
+                          <CheckRow
+                            ok={!!pert.evidence?.failureOutputComparable}
+                            label="Textual Signature Match"
+                            detail="The failure logs (stderr) are comparable between environments."
+                          />
+                        </ul>
+
+                        <EvidenceBlock
+                          evidence={pert.evidence}
+                          candidateName={candidateName}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 
