@@ -3,7 +3,14 @@ import type { ExecutionResult } from '../types.js';
 
 export async function executeCleanCommand(
   command: string,
-  projectPath: string
+  projectPath: string,
+  options?: {
+    restoreProjectLocalExecutable?: {
+      name: string;
+      packageName: string;
+      symlinkTarget: string; // e.g. "../package/bin/executable"
+    };
+  }
 ): Promise<ExecutionResult> {
   return new Promise((resolve) => {
     const startTime = performance.now();
@@ -19,14 +26,25 @@ export async function executeCleanCommand(
       '--rm',
       '-v',
       `${projectPath}:/src:ro`,
+    ];
+
+    let setupCommand = 'tar cf - -C /src --exclude=node_modules . | tar xf - -C /workspace';
+
+    if (options?.restoreProjectLocalExecutable) {
+      const { name, packageName, symlinkTarget } = options.restoreProjectLocalExecutable;
+      dockerArgs.push('-v', `${projectPath}/node_modules/${packageName}:/workspace/node_modules/${packageName}:ro`);
+      setupCommand += ` && mkdir -p node_modules/.bin && ln -s "${symlinkTarget}" "node_modules/.bin/${name}"`;
+    }
+
+    dockerArgs.push(
       '-w',
       '/workspace',
       'node:22-slim',
       'sh',
       '-c',
-      'tar cf - -C /src --exclude=node_modules . | tar xf - -C /workspace && eval "$0"',
-      command,
-    ];
+      `${setupCommand} && eval "$0"`,
+      command
+    );
 
     const child = spawn('docker', dockerArgs, { shell: false });
 

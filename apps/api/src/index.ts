@@ -148,6 +148,7 @@ Do not introduce facts that are not present in the supplied evidence.
 Evidence Language Rules (You MUST follow these based on the Evidence level):
 - CONFIRMED: You may state ColdProof confirmed the candidate is responsible.
 - STRONG_EVIDENCE: State "The evidence strongly supports [candidate] as a contributor" or similar. DO NOT say "definitely caused", "directly attributable", "proven cause", "100% caused", "certain", or "guaranteed".
+- PARTIAL_EVIDENCE: State "Restoring [candidate] allowed execution to progress further, but another failure occurred. It contributed to the failure but is not the sole cause."
 - SUSPECTED: State "[candidate] is a suspected environmental contributor, but the available evidence is not sufficient to establish causality."
 - NOT_IMPLICATED: State the perturbation did not reproduce the observed failure and the candidate was not implicated.
 - NO_ENVIRONMENT_CAUSE_FOUND: State ColdProof did not find sufficient evidence that an environmental difference caused the failure.

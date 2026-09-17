@@ -3,7 +3,7 @@ import { promisify } from 'node:util';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import type { EnvironmentCandidate } from '../types.js';
+import type { EnvironmentCandidate, ExecutionResult } from '../types.js';
 import { executeCleanCommand } from './executeClean.js';
 
 const execAsync = promisify(exec);
@@ -11,7 +11,7 @@ const execAsync = promisify(exec);
 const BINARY_ALLOWLIST = ['jq', 'curl', 'git', 'psql', 'python', 'python3', 'node', 'npm'];
 const ENV_ALLOWLIST = new Set(['DATABASE_URL', 'API_URL', 'NODE_ENV', 'CI', 'PORT', 'HOST', 'DEBUG']);
 
-export async function detectCandidates(command: string, projectPath: string): Promise<EnvironmentCandidate[]> {
+export async function detectCandidates(command: string, projectPath: string, cleanResult?: ExecutionResult): Promise<EnvironmentCandidate[]> {
   const candidates: EnvironmentCandidate[] = [];
 
   // --- A. Runtime Version Probe ---
@@ -130,6 +130,38 @@ exec "${realPath}" "$@"
     }
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+
+  // --- D. Project-Local Executable Probe ---
+  if (cleanResult && cleanResult.exitCode !== 0) {
+    try {
+      const binDir = path.join(projectPath, 'node_modules', '.bin');
+      if (fs.existsSync(binDir)) {
+        const localBins = fs.readdirSync(binDir);
+        const regex = /(?:sh: \d+: |bash: line \d+: |^)([a-zA-Z0-9_.-]+): (?:command )?not found/gm;
+        let m;
+        const missingSet = new Set<string>();
+        while ((m = regex.exec(cleanResult.stderr)) !== null) {
+          missingSet.add(m[1]);
+        }
+
+        for (const missing of missingSet) {
+          if (localBins.includes(missing)) {
+            candidates.push({
+              id: `PROJECT_LOCAL_EXECUTABLE:${missing}`,
+              type: 'PROJECT_LOCAL_EXECUTABLE',
+              name: missing,
+              warmValue: true,
+              cleanValue: false,
+              observed: true,
+              reason: 'Project-local executable is available in the warm environment but unavailable in the clean environment.',
+            });
+          }
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
   }
 
   return candidates;

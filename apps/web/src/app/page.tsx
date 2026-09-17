@@ -12,6 +12,7 @@ function EvidenceBadge({ classification }: { classification?: string }) {
   const map: Record<string, string> = {
     CONFIRMED: 'bg-pass/10 border-pass/40 text-pass',
     STRONG_EVIDENCE: 'bg-evidence/10 border-evidence/40 text-evidence',
+    PARTIAL_EVIDENCE: 'bg-evidence/10 border-evidence/40 text-evidence',
     NOT_IMPLICATED: 'bg-secondary/10 border-secondary/30 text-secondary',
     UNABLE_TO_TEST: 'bg-secondary/10 border-secondary/30 text-secondary',
   };

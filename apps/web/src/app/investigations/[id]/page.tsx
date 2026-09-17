@@ -47,26 +47,27 @@ function EvidenceBlock({ evidence, candidateName }: { evidence: any; candidateNa
   const cls = evidence?.classification;
   const isConfirmed = cls === 'CONFIRMED';
   const isStrong = cls === 'STRONG_EVIDENCE';
-  const isPositive = isConfirmed || isStrong;
+  const isPartial = cls === 'PARTIAL_EVIDENCE';
+  const isPositive = isConfirmed || isStrong || isPartial;
 
   return (
     <div className={cn(
       'rounded-lg border p-5 flex items-start gap-4 mt-5',
       isConfirmed ? 'bg-pass/8 border-pass/40' :
-      isStrong ? 'bg-evidence/8 border-evidence/40' :
+      (isStrong || isPartial) ? 'bg-evidence/8 border-evidence/40' :
       'bg-surface border-border'
     )}>
       <div className={cn(
         'p-2 rounded-full border flex-shrink-0',
         isConfirmed ? 'bg-pass/15 border-pass/40 text-pass' :
-        isStrong ? 'bg-evidence/15 border-evidence/40 text-evidence' :
+        (isStrong || isPartial) ? 'bg-evidence/15 border-evidence/40 text-evidence' :
         'bg-elevated border-border text-secondary'
       )}>
         {isConfirmed ? (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-        ) : isStrong ? (
+        ) : (isStrong || isPartial) ? (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
@@ -79,7 +80,7 @@ function EvidenceBlock({ evidence, candidateName }: { evidence: any; candidateNa
       <div className="min-w-0">
         <h5 className={cn(
           'font-bold text-sm tracking-wide uppercase',
-          isConfirmed ? 'text-pass' : isStrong ? 'text-evidence' : 'text-secondary'
+          isConfirmed ? 'text-pass' : (isStrong || isPartial) ? 'text-evidence' : 'text-secondary'
         )}>
           {cls?.replace(/_/g, ' ') ?? 'UNKNOWN'}
         </h5>
@@ -88,6 +89,8 @@ function EvidenceBlock({ evidence, candidateName }: { evidence: any; candidateNa
             ? `${candidateName} is confirmed as the causal environmental factor.`
             : isStrong
             ? `${candidateName} strongly correlates with the failure. Exit codes matched; failure text varied slightly.`
+            : isPartial
+            ? `Restoring ${candidateName} allowed execution to progress further, but another failure occurred.`
             : `${candidateName} was perturbed but did not reproduce the clean failure signature.`}
         </p>
       </div>
@@ -218,7 +221,7 @@ export default function CausalProofPage() {
   // Badge color for header
   const headerBadgeCls =
     evidenceCls === 'CONFIRMED' ? 'bg-pass/10 text-pass border-pass/30' :
-    evidenceCls === 'STRONG_EVIDENCE' ? 'bg-evidence/10 text-evidence border-evidence/40' :
+    (evidenceCls === 'STRONG_EVIDENCE' || evidenceCls === 'PARTIAL_EVIDENCE') ? 'bg-evidence/10 text-evidence border-evidence/40' :
     evidenceCls === 'NOT_IMPLICATED' ? 'bg-secondary/10 text-secondary border-secondary/30' :
     !isBehaviorChanged ? 'bg-pass/10 text-pass border-pass/30' :
     'bg-fail/10 text-fail border-fail/30';
@@ -265,7 +268,7 @@ export default function CausalProofPage() {
         <span>→</span>
         <span className={cn('text-xs font-bold uppercase',
           evidenceCls === 'CONFIRMED' ? 'text-pass' :
-          evidenceCls === 'STRONG_EVIDENCE' ? 'text-evidence' :
+          (evidenceCls === 'STRONG_EVIDENCE' || evidenceCls === 'PARTIAL_EVIDENCE') ? 'text-evidence' :
           'text-secondary'
         )}>PROVE</span>
       </div>

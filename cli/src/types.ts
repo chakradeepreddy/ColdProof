@@ -35,6 +35,7 @@ export interface ComparisonResult {
 
 export type CandidateType =
   | 'EXECUTABLE'
+  | 'PROJECT_LOCAL_EXECUTABLE'
   | 'RUNTIME_VERSION'
   | 'ENVIRONMENT_VARIABLE';
 
@@ -49,7 +50,7 @@ export interface EnvironmentCandidate {
 }
 
 export interface PerturbationEvidence {
-  classification: 'CONFIRMED' | 'STRONG_EVIDENCE' | 'NOT_IMPLICATED' | 'UNABLE_TO_TEST';
+  classification: 'CONFIRMED' | 'STRONG_EVIDENCE' | 'PARTIAL_EVIDENCE' | 'NOT_IMPLICATED' | 'UNABLE_TO_TEST';
   candidateObserved: boolean;
   candidatePerturbed: boolean;
   cleanFailed: boolean;
