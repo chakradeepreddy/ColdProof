@@ -317,7 +317,7 @@ export default function NewInvestigationPage() {
                 </button>
               </div>
               <p className="text-xs text-secondary/45 mt-1.5 leading-relaxed">
-                The Copy button includes authentication credentials. Run from the root of the project being investigated.
+                Click <strong className="text-secondary/70">Copy</strong>, then paste the command into your terminal and run it from your project root. The copied command securely includes your authentication credentials.
               </p>
             </div>
           ) : (

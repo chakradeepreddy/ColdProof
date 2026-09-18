@@ -234,14 +234,21 @@ function EvidenceCard({ evidence, candidateName }: { evidence: any; candidateNam
           </svg>
         )}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2.5 mb-2 flex-wrap">
           <span className={cn('text-xs font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full border', cfg.badge)}>
             {cfg.label}
           </span>
         </div>
-        <p className="text-sm font-semibold text-primary mb-1">{headline}</p>
-        <p className="text-sm text-primary/70 leading-relaxed">{description}</p>
+        <p className="text-sm font-semibold text-primary mb-4">{headline}</p>
+        
+        <div className="bg-[#08090A] rounded-lg p-3.5 border border-border/40">
+          <p className="text-[10px] font-bold text-secondary/50 uppercase tracking-[0.16em] font-mono mb-1.5 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            What does this mean?
+          </p>
+          <p className="text-sm text-primary/70 leading-relaxed">{description}</p>
+        </div>
       </div>
     </div>
   );
@@ -309,9 +316,9 @@ function DeleteModal({
 }
 
 // ─── Section wrapper ────────────────────────────────────────────────
-function Section({ step, title, badge, accentColor = 'experiment', children }: {
+function Section({ step, title, badge, accentColor = 'experiment', className, children }: {
   step: string; title: string; badge?: React.ReactNode;
-  accentColor?: 'experiment' | 'pass' | 'fail' | 'evidence'; children: React.ReactNode;
+  accentColor?: 'experiment' | 'pass' | 'fail' | 'evidence'; className?: string; children: React.ReactNode;
 }) {
   const ref = useReveal();
   const accentCls = {
@@ -324,7 +331,8 @@ function Section({ step, title, badge, accentColor = 'experiment', children }: {
   return (
     <div ref={ref} className={cn(
       'reveal bg-surface border border-border rounded-xl overflow-hidden mb-4',
-      accentCls
+      accentCls,
+      className
     )}>
       <div className="px-5 py-3.5 border-b border-border/60 bg-elevated/10 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -586,7 +594,7 @@ export default function InvestigationDetailPage() {
 
         {/* Back + Delete row */}
         <div className="flex items-center justify-between mb-7 animate-fade-in">
-          <Link href="/" className="inline-flex items-center text-secondary/60 hover:text-primary text-sm transition-colors duration-150 gap-1.5 group">
+          <Link href="/investigations" className="inline-flex items-center text-secondary/60 hover:text-primary text-sm transition-colors duration-150 gap-1.5 group">
             <svg className="w-4 h-4 transition-transform duration-150 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -739,10 +747,13 @@ export default function InvestigationDetailPage() {
                           {/* Experiment */}
                           <div>
                             <p className="text-[10px] font-bold text-secondary/50 uppercase tracking-[0.16em] mb-3 font-mono">
-                              Experiment: block <code className="font-mono text-primary/70 bg-elevated px-1.5 rounded">{candidateName}</code>
+                              What Did ColdProof Test?
+                            </p>
+                            <p className="text-sm text-secondary/80 mb-4 leading-relaxed">
+                              Blocked <code className="font-mono text-primary/70 bg-elevated px-1.5 rounded text-xs">{candidateName}</code> to observe behavioral changes.
                             </p>
                             <TerminalPanel
-                              label={`Perturbed warm — ${candidateName} blocked`}
+                              label={`What happened: Perturbed warm run`}
                               exitCode={pert.perturbedWarm?.exitCode}
                               output={pert.perturbedWarm?.stderr || pert.perturbedWarm?.stdout || ''}
                               highlight={pert.perturbedWarm?.exitCode === 0 ? 'pass' : 'fail'}
@@ -763,15 +774,19 @@ export default function InvestigationDetailPage() {
                           {/* Failure signature */}
                           <div>
                             <p className="text-[10px] font-bold text-secondary/50 uppercase tracking-[0.16em] mb-3 font-mono">
-                              Failure Signature Match
+                              What Differed? (Signature Match)
                             </p>
-                            <ul>
+                            <ul className="mb-4">
                               <CheckRow ok={!!pert.evidence?.candidateObserved} label="Candidate Observed" detail="Candidate was accessed during warm execution." />
                               <CheckRow ok={!!pert.evidence?.candidatePerturbed} label="Candidate Perturbed" detail="ColdProof successfully blocked or altered the candidate." />
                               <CheckRow ok={!!pert.evidence?.perturbedFailed} label="Perturbed Execution Failed" detail="Blocking the candidate caused a failure in the warm environment." />
                               <CheckRow ok={!!pert.evidence?.sameExitCode} label="Exit Code Match" detail="Perturbed failure exit code matches the clean failure." />
                               <CheckRow ok={!!pert.evidence?.failureOutputComparable} label="Textual Signature Match" detail="Failure logs are comparable between environments." />
                             </ul>
+                            
+                            <p className="text-[10px] font-bold text-secondary/50 uppercase tracking-[0.16em] mb-3 font-mono mt-8">
+                              Result
+                            </p>
                             <EvidenceCard evidence={pert.evidence} candidateName={candidateName} />
                           </div>
                         </div>
@@ -793,6 +808,7 @@ export default function InvestigationDetailPage() {
           step="04"
           title="Plain-English Explanation"
           accentColor="experiment"
+          className="hover-card-elevate hover-glow-experiment"
           badge={
             !aiExplanation && !explanationError ? (
               <button

@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0B0D0F;
-  --color-surface: #111417;
-  --color-elevated: #171B1F;
-  --color-border: #252A30;
+  --color-background: #060709; /* Deep near-black */
+  --color-surface: #0C0E12;
+  --color-elevated: #13161C;
+  --color-border: #1E232B;
 
   --color-primary: #E7E5E0;
   --color-secondary: #8B929A;
@@ -31,11 +31,35 @@
     background-color: var(--color-background);
     color: var(--color-primary);
     font-family: var(--font-sans);
-    /* Dot-matrix — precision instrument / PCB feel */
+    
+    /* Layered technical background — subtle grid, faint nodes, slight illumination */
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(110, 156, 203, 0.05) 0%, transparent 60%),
-      radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px);
-    background-size: 100% 100%, 28px 28px;
+      /* Subtle radial illumination (top center) */
+      radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110, 156, 203, 0.04) 0%, transparent 70%),
+      /* Faint warm evidence accent (bottom left) */
+      radial-gradient(ellipse 50% 50% at 0% 100%, rgba(208, 162, 83, 0.015) 0%, transparent 60%),
+      /* Faint technical crosses */
+      linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px),
+      /* Dot matrix */
+      radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px, 16px 16px;
+    background-position: center, center, 32px 32px, 32px 32px, center;
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .hover-card-elevate {
+    @apply transition-all duration-300;
+  }
+  .hover-card-elevate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  .hover-glow-experiment:hover {
+    box-shadow: 0 0 20px -5px rgba(110, 156, 203, 0.2);
+    border-color: rgba(110, 156, 203, 0.3);
   }
 }
 

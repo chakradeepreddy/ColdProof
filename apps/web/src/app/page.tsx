@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -97,26 +97,43 @@ function FlowStep({ label, sub, last = false }: { label: string; sub?: string; l
 }
 
 // ─── Architecture node ────────────────────────────────────────────────────────
-function ArchNode({ icon, label, sub, highlight = false, last = false }: {
-  icon: React.ReactNode; label: string; sub?: string; highlight?: boolean; last?: boolean;
+function ArchNode({ icon, label, sub, highlight = false, last = false, details }: {
+  icon: React.ReactNode; label: string; sub?: string; highlight?: boolean; last?: boolean; details?: string;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-col items-center">
-      <div className={`flex items-center gap-3 px-5 py-3 rounded-xl border transition-all duration-200 hover:border-experiment/30 hover:bg-experiment/3 group w-full max-w-xs ${
-        highlight ? 'border-experiment/25 bg-experiment/5' : 'border-border/50 bg-elevated/30'
+    <div className="flex flex-col items-center w-full">
+      <button 
+        onClick={() => setOpen(!open)}
+        className={`flex flex-col text-left transition-all duration-300 w-full max-w-xs hover-card-elevate rounded-xl border ${
+        highlight ? 'border-experiment/25 bg-experiment/5 hover-glow-experiment' : 'border-border/50 bg-elevated/30 hover:border-experiment/30 hover:bg-experiment/5'
       }`}>
-        <div className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
-          highlight ? 'border-experiment/30 bg-experiment/10 text-experiment' : 'border-border/40 bg-elevated text-secondary/50 group-hover:text-experiment/60 group-hover:border-experiment/20'
-        }`}>
-          {icon}
+        <div className="flex items-center gap-3 px-5 py-3 w-full group">
+          <div className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
+            highlight ? 'border-experiment/30 bg-experiment/10 text-experiment' : 'border-border/40 bg-elevated text-secondary/50 group-hover:text-experiment/60 group-hover:border-experiment/20'
+          }`}>
+            {icon}
+          </div>
+          <div className="flex-1">
+            <p className={`text-xs font-bold uppercase tracking-[0.12em] transition-colors duration-200 ${
+              highlight ? 'text-experiment' : 'text-primary/80 group-hover:text-primary'
+            }`}>{label}</p>
+            {sub && <p className="text-[10px] text-secondary/40 font-mono mt-0.5">{sub}</p>}
+          </div>
+          {details && (
+             <svg className={`w-3.5 h-3.5 text-secondary/40 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+             </svg>
+          )}
         </div>
-        <div>
-          <p className={`text-xs font-bold uppercase tracking-[0.12em] transition-colors duration-200 ${
-            highlight ? 'text-experiment' : 'text-primary/80 group-hover:text-primary'
-          }`}>{label}</p>
-          {sub && <p className="text-[10px] text-secondary/40 font-mono mt-0.5">{sub}</p>}
-        </div>
-      </div>
+        {details && (
+          <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="px-5 pb-4 pt-1 text-xs text-secondary/60 leading-relaxed border-t border-border/10 mx-2">
+              {details}
+            </div>
+          </div>
+        )}
+      </button>
       {!last && (
         <div className="flex flex-col items-center my-0.5">
           <div className="w-px h-5 bg-border/40 animate-connector" />
@@ -129,32 +146,48 @@ function ArchNode({ icon, label, sub, highlight = false, last = false }: {
 
 // ─── Capability item ──────────────────────────────────────────────────────────
 function CapabilityItem({ label, detail }: { label: string; detail: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-border/20 last:border-0">
-      <span className="w-4 h-4 rounded-full bg-pass/15 border border-pass/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <svg className="w-2.5 h-2.5 text-pass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+    <button onClick={() => setOpen(!open)} className="w-full text-left flex flex-col py-2.5 border-b border-border/20 last:border-0 group transition-colors hover:bg-elevated/20 px-2 -mx-2 rounded-lg">
+      <div className="flex items-start gap-3 w-full">
+        <span className="w-4 h-4 rounded-full bg-pass/15 border border-pass/30 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors group-hover:bg-pass/25">
+          <svg className="w-2.5 h-2.5 text-pass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-primary transition-colors group-hover:text-primary/90">{label}</p>
+        </div>
+        <svg className={`w-4 h-4 text-secondary/30 mt-0.5 transition-transform duration-200 group-hover:text-secondary/60 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
         </svg>
-      </span>
-      <div>
-        <p className="text-sm font-semibold text-primary">{label}</p>
-        <p className="text-xs text-secondary/55 mt-0.5 leading-relaxed">{detail}</p>
       </div>
-    </div>
+      <div className={`overflow-hidden transition-all duration-300 ml-7 ${open ? 'max-h-32 opacity-100 mt-1.5' : 'max-h-0 opacity-0 mt-0'}`}>
+         <p className="text-xs text-secondary/65 leading-relaxed">{detail}</p>
+      </div>
+    </button>
   );
 }
 
 function ScopeItem({ label, detail }: { label: string; detail: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-border/20 last:border-0">
-      <span className="w-4 h-4 rounded-full bg-elevated border border-border/50 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <span className="w-1 h-1 rounded-full bg-secondary/30" />
-      </span>
-      <div>
-        <p className="text-sm font-medium text-secondary/70">{label}</p>
-        <p className="text-xs text-secondary/40 mt-0.5 leading-relaxed">{detail}</p>
+    <button onClick={() => setOpen(!open)} className="w-full text-left flex flex-col py-2.5 border-b border-border/20 last:border-0 group transition-colors hover:bg-elevated/20 px-2 -mx-2 rounded-lg">
+      <div className="flex items-start gap-3 w-full">
+        <span className="w-4 h-4 rounded-full bg-elevated border border-border/50 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors group-hover:border-border/80">
+          <span className="w-1 h-1 rounded-full bg-secondary/30" />
+        </span>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-secondary/70 transition-colors group-hover:text-secondary/90">{label}</p>
+        </div>
+        <svg className={`w-4 h-4 text-secondary/30 mt-0.5 transition-transform duration-200 group-hover:text-secondary/60 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
       </div>
-    </div>
+      <div className={`overflow-hidden transition-all duration-300 ml-7 ${open ? 'max-h-32 opacity-100 mt-1.5' : 'max-h-0 opacity-0 mt-0'}`}>
+         <p className="text-xs text-secondary/45 leading-relaxed">{detail}</p>
+      </div>
+    </button>
   );
 }
 
@@ -196,9 +229,9 @@ export default function DashboardPage() {
           HERO
       ═══════════════════════════════════════════════════════════ */}
       <section className="relative border-b border-border/40 overflow-hidden">
-        {/* Extra radial glow for hero only */}
+        {/* Extra radial glow and vignette for hero only */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 55% at 50% -10%, rgba(110,156,203,0.07) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(110,156,203,0.06) 0%, transparent 75%), linear-gradient(to bottom, transparent 60%, var(--color-background) 100%)',
         }} />
 
         <div className="max-w-5xl mx-auto px-6 py-20 md:py-28 relative">
@@ -376,16 +409,18 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex flex-col items-center space-y-0">
+            <div className="flex flex-col items-center space-y-0 w-full">
               <ArchNode
                 label="Developer machine"
                 sub="warm execution environment"
+                details="Runs locally using the user's default toolchain. Captures baseline exit codes and output to compare against the clean environment."
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" strokeWidth="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 21h8m-4-4v4" /></svg>}
               />
               <ArchNode
                 label="ColdProof CLI"
                 sub="npm install -g coldproof"
                 highlight
+                details="The core investigation engine. Orchestrates the WARM run, Docker build/run, candidate extraction, and subsequent PERTURB cycles."
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
               />
               <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
@@ -409,28 +444,33 @@ export default function DashboardPage() {
               <ArchNode
                 label="Candidate detection"
                 sub="executables · runtimes · env"
+                details="Compares `which` paths, `npm list`, and `env` vars between the WARM and CLEAN runs to isolate environmental differences."
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" strokeWidth="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35" /></svg>}
               />
               <ArchNode
                 label="Perturbation engine"
                 sub="block candidate · re-execute · classify"
                 highlight
+                details="Systematically injects shims into PATH to block or manipulate specific candidates, then re-runs the command to observe behavioral changes."
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
               />
               <ArchNode
                 label="API server"
                 sub="Express · Firebase auth"
+                details="Receives the structured JSON investigation reports generated by the CLI, authenticates the request, and persists it to the database."
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7" /></svg>}
               />
               <ArchNode
                 label="PostgreSQL"
                 sub="investigations · candidates · evidence"
+                details="Uses Prisma ORM for relational storage of investigations, candidate states, output logs, and classification evidence."
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" strokeWidth="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12M21 19c0 1.66-4.03 3-9 3S3 20.66 3 19" /><line x1="3" y1="5" x2="3" y2="19" strokeWidth="2" /><line x1="21" y1="5" x2="21" y2="19" strokeWidth="2" /></svg>}
               />
               <ArchNode
                 label="Web dashboard"
                 sub="Next.js · investigation detail · evidence"
                 last
+                details="This UI. Fetches the stored investigation records, translates the structured evidence into human-readable views, and connects to Groq AI for plain-English summaries."
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
               />
             </div>
