@@ -159,9 +159,9 @@ export default function LoginPage() {
           className="absolute inset-0"
           style={{
             backgroundImage: `
+              radial-gradient(circle, rgba(110, 156, 203, 0.15) 2px, transparent 2px),
               radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px),
-              radial-gradient(circle, rgba(110, 156, 203, 0.04) 1px, transparent 1px),
-              radial-gradient(circle, rgba(110, 156, 203, 0.04) 1px, transparent 1px)
+              radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px)
             `,
             backgroundSize: '90px 156px, 30px 52px, 30px 52px',
             backgroundPosition: '45px 78px, 0 0, 15px 26px',

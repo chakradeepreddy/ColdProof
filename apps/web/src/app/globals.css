@@ -43,10 +43,10 @@
       /* Layer 3: Radial blue illumination around hero (top center) */
       radial-gradient(ellipse 80% 50% at 50% -10%, rgba(110, 156, 203, 0.07) 0%, transparent 70%),
       /* Layer 2: Larger diagnostic coordinate markers */
-      radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px),
+      radial-gradient(circle, rgba(110, 156, 203, 0.15) 2px, transparent 2px),
       /* Layer 1 & 0: Staggered tiny hex dot field (blue-gray) */
-      radial-gradient(circle, rgba(110, 156, 203, 0.04) 1px, transparent 1px),
-      radial-gradient(circle, rgba(110, 156, 203, 0.04) 1px, transparent 1px);
+      radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px),
+      radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px);
     background-size: 100% 100%, 100% 100%, 90px 156px, 30px 52px, 30px 52px;
     background-position: center, center, 45px 78px, 0 0, 15px 26px;
     background-attachment: fixed;
