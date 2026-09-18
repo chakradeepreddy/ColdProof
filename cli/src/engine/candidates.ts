@@ -92,7 +92,7 @@ exec "${realPath}" "$@"
     }
 
     // Execute with shimmed PATH
-    console.log('\\n[ColdProof MVP] Re-executing command on host to gather invocation telemetry (instrumentation pass)...');
+    console.log('\n[ColdProof] Re-executing command on host to gather invocation telemetry (instrumentation pass)...');
     const env = { ...process.env, PATH: `${tmpDir}:${process.env.PATH}` };
     await new Promise((resolve) => {
       const child = spawn(command, { shell: true, env, stdio: 'ignore' });

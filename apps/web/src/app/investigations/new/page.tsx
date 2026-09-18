@@ -176,11 +176,21 @@ export default function NewInvestigationPage() {
             <p className="text-xs text-secondary mt-0.5">Once per machine</p>
           </div>
         </div>
-        <div className="p-5">
-          <CommandBlock command="npm install -g coldproof" />
-          <p className="text-xs text-secondary/60 mt-2.5 leading-relaxed">
-            Requires Node.js and Docker. Docker must be running during investigation.
-          </p>
+        <div className="p-5 space-y-4">
+          <div>
+            <p className="text-xs text-secondary/60 uppercase tracking-widest font-mono mb-1.5">1. Install</p>
+            <CommandBlock command="npm install -g coldproof" />
+            <p className="text-xs text-secondary/60 mt-2 leading-relaxed">
+              Requires Node.js 22+ and Docker. Docker must be running during investigation.
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-secondary/60 uppercase tracking-widest font-mono mb-1.5">2. Verify</p>
+            <CommandBlock command="coldproof --help" muted />
+            <p className="text-xs text-secondary/60 mt-2 leading-relaxed">
+              See all available commands and options. Confirms the CLI is installed and on your PATH.
+            </p>
+          </div>
         </div>
       </div>
 
