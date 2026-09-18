@@ -42,14 +42,12 @@
       radial-gradient(circle at 50% 50%, transparent 35%, rgba(6,7,9,0.85) 100%),
       /* Layer 3: Radial blue illumination around hero (top center) */
       radial-gradient(ellipse 80% 60% at 50% 15%, rgba(110, 156, 203, 0.04) 0%, transparent 65%),
-      /* Layer 2: Slightly larger technical grid */
-      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px),
-      /* Layer 1: Extremely subtle fine grid */
-      linear-gradient(rgba(255,255,255,0.008) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.008) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 96px 96px, 96px 96px, 24px 24px, 24px 24px;
-    background-position: center, center, 48px 48px, 48px 48px, 0 0, 0 0;
+      /* Layer 2: Slightly larger technical dots */
+      radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px),
+      /* Layer 1: Extremely subtle fine dots */
+      radial-gradient(circle, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 96px 96px, 24px 24px;
+    background-position: center, center, 48px 48px, 0 0;
     background-attachment: fixed;
   }
 }
