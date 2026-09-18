@@ -106,9 +106,9 @@ The CLI performs the investigation locally, while the ColdProof web application 
 
 ### Available Commands
 
+- `coldproof investigate <command>`: The main workflow. It compares environments, identifies candidates, performs controlled perturbations, classifies the evidence, and uploads the result.
 - `coldproof run <command>`: Runs a command and captures execution telemetry, optionally using `-c` for clean execution.
 - `coldproof compare <command>`: Compares execution of a command between warm and clean environments.
-- `coldproof investigate <command>`: The main workflow. It compares environments, identifies candidates, performs controlled perturbations, classifies the evidence, and uploads the result.
 
 ### Choosing Your Project Command
 
