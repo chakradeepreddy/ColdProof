@@ -144,11 +144,14 @@ export async function detectCandidates(command: string, projectPath: string, cle
       const binDir = path.join(projectPath, 'node_modules', '.bin');
       if (fs.existsSync(binDir)) {
         const localBins = fs.readdirSync(binDir);
-        const regex = /(?:sh: \d+: |bash: line \d+: |^)([a-zA-Z0-9_.-]+): (?:command )?not found/gm;
+        const r1 = /(?:sh: \d+: |bash: line \d+: |^'?)([a-zA-Z0-9_.-]+)'?: (?:command )?not found/;
+        const r2 = /'?([a-zA-Z0-9_.-]+)'? is not recognized as an internal or external command/;
+        const regex = new RegExp(r1.source + '|' + r2.source, 'gm');
         let m;
         const missingSet = new Set<string>();
         while ((m = regex.exec(cleanResult.stderr)) !== null) {
-          missingSet.add(m[1]);
+          const missing = m[1] || m[2];
+          if (missing) missingSet.add(missing);
         }
 
         for (const missing of missingSet) {

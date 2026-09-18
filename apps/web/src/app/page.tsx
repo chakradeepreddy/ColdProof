@@ -533,12 +533,12 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Supported Environments</h2>
               <p className="text-secondary/70 text-sm leading-relaxed">
-                ColdProof is designed for command-line development workflows and currently supports macOS/Linux workflows with Docker.
+                ColdProof is designed for command-line development workflows and currently supports macOS, Linux, and Windows workflows with Docker.
               </p>
             </div>
             <div className="space-y-0">
               {[
-                { label: 'macOS & Linux', detail: 'The investigation engine runs natively on macOS and Linux host machines.' },
+                { label: 'macOS, Linux & Windows', detail: 'The investigation engine runs natively on macOS, Linux, and Windows host machines.' },
                 { label: 'Docker Clean Environments', detail: 'Uses standard Docker containers to provide a guaranteed clean environment for behavioral comparison.' },
                 { label: 'Command-Line Workflows', detail: 'Supports any command-line build, test, or CI process that produces an exit code and output.' },
               ].map(item => <ScopeItem key={item.label} {...item} />)}
