@@ -5,11 +5,7 @@ export async function executeCleanCommand(
   command: string,
   projectPath: string,
   options?: {
-    restoreProjectLocalExecutable?: {
-      name: string;
-      packageName: string;
-      symlinkTarget: string; // e.g. "../package/bin/executable"
-    };
+    env?: Record<string, string>;
   }
 ): Promise<ExecutionResult> {
   return new Promise((resolve) => {
@@ -29,12 +25,6 @@ export async function executeCleanCommand(
     ];
 
     let setupCommand = 'tar cf - -C /src --exclude=node_modules . | tar xf - -C /workspace';
-
-    if (options?.restoreProjectLocalExecutable) {
-      const { name, packageName, symlinkTarget } = options.restoreProjectLocalExecutable;
-      dockerArgs.push('-v', `${projectPath}/node_modules/${packageName}:/workspace/node_modules/${packageName}:ro`);
-      setupCommand += ` && mkdir -p node_modules/.bin && ln -s "${symlinkTarget}" "node_modules/.bin/${name}"`;
-    }
 
     dockerArgs.push(
       '-w',

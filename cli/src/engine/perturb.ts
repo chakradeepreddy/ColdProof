@@ -106,69 +106,35 @@ export async function perturbCandidate(
     let perturbedFailed = false;
 
     if (candidate.type === 'PROJECT_LOCAL_EXECUTABLE') {
-      console.log(`\n   Restoring ${candidate.name} in clean environment...`);
-
-      const binPath = path.join(projectPath, 'node_modules', '.bin', candidate.name);
-      let target = '';
+      console.log(`\n   Blocking ${candidate.name} in warm environment...`);
       
+      const binDir = path.join(projectPath, 'node_modules', '.bin');
+      const blockedFiles: { original: string, blocked: string }[] = [];
+      
+      if (fs.existsSync(binDir)) {
+        const files = fs.readdirSync(binDir);
+        for (const file of files) {
+          // Block the main executable and any Windows shims (.cmd, .ps1)
+          if (file === candidate.name || file.startsWith(`${candidate.name}.`)) {
+            const original = path.join(binDir, file);
+            const blocked = path.join(binDir, `${file}.coldproof-blocked`);
+            fs.renameSync(original, blocked);
+            blockedFiles.push({ original, blocked });
+          }
+        }
+      }
+
       try {
-        const stats = fs.lstatSync(binPath);
-        if (stats.isSymbolicLink()) {
-          target = fs.readlinkSync(binPath);
-        } else {
-          // Windows: npm creates command shims rather than symlinks
-          let content = '';
-          try {
-            content = fs.readFileSync(binPath, 'utf8');
-          } catch (e: any) {
-            throw new Error(`Failed to read executable shim for ${candidate.name}: ${e.message}`);
-          }
-          
-          // The Unix shell shim (which npm always creates, even on Windows for bash) contains: "$basedir/../package/bin/file"
-          const shMatch = content.match(/"\$basedir\/([^"]+)"/);
-          if (shMatch && shMatch[1]) {
-            target = shMatch[1];
-          } else {
-            // Fallback to reading the .cmd batch file
-            try {
-              const cmdContent = fs.readFileSync(`${binPath}.cmd`, 'utf8');
-              // cmd shims contain: "%dp0%\..\package\bin\file"
-              const cmdMatch = cmdContent.match(/"%dp0%\\([^"]+)"/);
-              if (cmdMatch && cmdMatch[1]) {
-                target = cmdMatch[1].replace(/\\/g, '/');
-              } else {
-                throw new Error(`Could not parse symlink target from Windows shims for ${candidate.name}`);
-              }
-            } catch (e: any) {
-              throw new Error(`Could not parse symlink target from Windows shims for ${candidate.name}`);
-            }
+        perturbedWarm = await executeCommand(command, process.env);
+      } finally {
+        for (const { original, blocked } of blockedFiles) {
+          if (fs.existsSync(blocked)) {
+            fs.renameSync(blocked, original);
           }
         }
-      } catch (e: any) {
-        throw new Error(`Failed to read symlink/shim for ${candidate.name}: ${e.message}`);
       }
 
-      let packageName = '';
-      if (target.startsWith('../')) {
-        const parts = target.split('/');
-        if (parts[1].startsWith('@')) {
-          packageName = `${parts[1]}/${parts[2]}`;
-        } else {
-          packageName = parts[1];
-        }
-      } else {
-        throw new Error(`Symlink target format not supported: ${target}`);
-      }
-
-      perturbedWarm = await executeCleanCommand(command, projectPath, {
-        restoreProjectLocalExecutable: {
-          name: candidate.name,
-          packageName,
-          symlinkTarget: target
-        }
-      });
-
-      console.log(`   ✓ Restoration applied`);
+      console.log(`   ✓ Perturbation applied`);
 
       perturbedFailed = perturbedWarm.exitCode !== 0;
       const analysis = analyzeFailureSignatures(clean, perturbedWarm);
@@ -177,20 +143,19 @@ export async function perturbCandidate(
 
       if (!cleanFailed) {
         classification = 'UNABLE_TO_TEST';
-        explanation = 'Clean environment did not fail, so we cannot perform a restoration test.';
+        explanation = 'Clean environment did not fail, so we cannot perform a perturbation test.';
       } else if (!perturbedFailed) {
+        classification = 'NOT_IMPLICATED';
+        explanation = 'Perturbed environment succeeded, meaning this candidate is not the cause of the failure.';
+      } else if (sameExitCode && failureOutputComparable) {
         classification = 'CONFIRMED';
-        explanation = 'Restoring the missing local dependency allowed the clean execution to succeed.';
+        explanation = 'Removing this local dependency reproduced the exact failure in the warm environment.';
+      } else if (sameExitCode) {
+        classification = 'STRONG_EVIDENCE';
+        explanation = 'Removing this local dependency reproduced a similar failure in the warm environment.';
       } else {
-        const failureDisappeared = didCandidateFailureDisappear(clean, perturbedWarm, candidate.name);
-
-        if (failureDisappeared) {
-          classification = 'PARTIAL_EVIDENCE';
-          explanation = 'Restoring the candidate removed the original missing-executable failure, but the execution still failed for another reason.';
-        } else {
-          classification = 'NOT_IMPLICATED';
-          explanation = 'Restoring the candidate did not remove the detected missing-executable failure.';
-        }
+        classification = 'NOT_IMPLICATED';
+        explanation = 'Perturbed environment failed, but the exit code did not match the clean environment.';
       }
 
     } else {

@@ -8,6 +8,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import ReactMarkdown from 'react-markdown';
 
 function cn(...inputs: any[]) { return twMerge(clsx(inputs)); }
 
@@ -411,42 +412,17 @@ function CandidateRow({ candidate }: { candidate: any }) {
 
 // ─── AI explanation ────────────────────────────────────────────────
 function AIExplanation({ text }: { text: string }) {
-  // Split on double-newlines into paragraphs. Each paragraph that starts with
-  // a recognizable header keyword gets visual emphasis.
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
-  const SECTION_HEADERS = [
-    'what happened', 'what was different', 'what coldproof tested', 'what the evidence means',
-    'next steps', 'conclusion', 'summary', 'what this proves', 'what differed',
-  ];
-
   return (
-    <div className="space-y-4">
-      {paragraphs.map((para, i) => {
-        const firstLine = para.split('\n')[0].trim().toLowerCase();
-        const isHeader = SECTION_HEADERS.some(h => firstLine.startsWith(h) || firstLine.startsWith('###') || firstLine.startsWith('**'));
-        const cleanText = para.replace(/^###?\s*/, '').replace(/^\*\*(.+)\*\*/m, '$1');
-
-        if (isHeader) {
-          const [headerLine, ...rest] = cleanText.split('\n');
-          return (
-            <div key={i}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-secondary/50 font-mono mb-1.5">
-                {headerLine.replace(/\*\*/g, '').trim()}
-              </p>
-              {rest.length > 0 && (
-                <p className="text-sm text-primary/80 leading-relaxed whitespace-pre-wrap">
-                  {rest.join('\n').trim()}
-                </p>
-              )}
-            </div>
-          );
-        }
-        return (
-          <p key={i} className="text-sm text-primary/80 leading-relaxed whitespace-pre-wrap">
-            {cleanText}
-          </p>
-        );
-      })}
+    <div className="prose prose-sm prose-invert max-w-none 
+      prose-headings:font-bold prose-headings:text-primary prose-headings:tracking-tight 
+      prose-h3:text-sm prose-h3:mt-6 prose-h3:mb-2 prose-h3:uppercase prose-h3:tracking-[0.16em] prose-h3:text-secondary/60 prose-h3:font-mono
+      prose-p:text-primary/80 prose-p:leading-relaxed prose-p:mb-4 
+      prose-a:text-pass prose-a:no-underline hover:prose-a:underline
+      prose-strong:text-primary prose-strong:font-semibold
+      prose-ul:my-2 prose-li:my-0.5 prose-li:text-primary/80
+      prose-code:text-primary/90 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:font-mono prose-code:text-[13px]
+      prose-pre:bg-[#0A0B0C] prose-pre:border prose-pre:border-border/40 prose-pre:p-4 prose-pre:rounded-xl">
+      <ReactMarkdown>{text}</ReactMarkdown>
     </div>
   );
 }
