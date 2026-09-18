@@ -121,6 +121,7 @@ export default function NewInvestigationPage() {
   const [command, setCommand] = useState('');
   const [coldproofPath, setColdproofPath] = useState('');
   const [showAlternative, setShowAlternative] = useState(false);
+  const [terminal, setTerminal] = useState<'mac' | 'cmd' | 'ps'>('mac');
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projectError, setProjectError] = useState('');
   const [token, setToken] = useState<string | null>(null);
@@ -181,9 +182,19 @@ export default function NewInvestigationPage() {
   const effectivePath = coldproofPath.trim() || '/path/to/ColdProof';
   const primaryDisplayCommand = `coldproof investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
   const altDisplayCommand = `node ${effectivePath}/cli/dist/index.js investigate "${effectiveCommand.replace(/"/g, '\\"')}"`;
-  const envPrefix = projectId && token
-    ? `export COLDPROOF_API_URL="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}"\nexport COLDPROOF_TOKEN="${token}"\nexport COLDPROOF_PROJECT_ID="${projectId}"`
-    : '';
+  
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  let envPrefix = '';
+  if (projectId && token) {
+    if (terminal === 'mac') {
+      envPrefix = `export COLDPROOF_API_URL="${apiUrl}"\nexport COLDPROOF_TOKEN="${token}"\nexport COLDPROOF_PROJECT_ID="${projectId}"`;
+    } else if (terminal === 'cmd') {
+      envPrefix = `set "COLDPROOF_API_URL=${apiUrl}"\nset "COLDPROOF_TOKEN=${token}"\nset "COLDPROOF_PROJECT_ID=${projectId}"`;
+    } else if (terminal === 'ps') {
+      envPrefix = `$env:COLDPROOF_API_URL="${apiUrl}"\n$env:COLDPROOF_TOKEN="${token}"\n$env:COLDPROOF_PROJECT_ID="${projectId}"`;
+    }
+  }
+
   const fullCliCommand = envPrefix ? `${envPrefix}\n${primaryDisplayCommand}` : '';
   const fullAltCommand = envPrefix && coldproofPath.trim() ? `${envPrefix}\n${altDisplayCommand}` : '';
 
@@ -226,7 +237,7 @@ export default function NewInvestigationPage() {
         <div className="p-5 space-y-4">
           <div>
             <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Install</p>
-            <CommandBlock command="npm install -g coldproof@0.1.1" />
+            <CommandBlock command="npm install -g coldproof@0.1.4" />
           </div>
           <div>
             <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Verify CLI is on your PATH</p>
@@ -320,7 +331,27 @@ export default function NewInvestigationPage() {
           {/* Primary command */}
           {projectId && token ? (
             <div>
-              <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Command to run</p>
+              <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Choose your terminal</p>
+              <div className="flex gap-2 mb-3">
+                {[
+                  { id: 'mac', label: 'macOS / Linux' },
+                  { id: 'cmd', label: 'Windows CMD' },
+                  { id: 'ps', label: 'Windows PowerShell' }
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTerminal(t.id as any)}
+                    className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors duration-150 ${
+                      terminal === t.id
+                        ? 'bg-primary text-background'
+                        : 'bg-elevated/50 text-secondary/70 hover:bg-border/40'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex items-center justify-between gap-3 rounded-xl border bg-[#08090A] border-border/60 px-4 py-3.5 font-mono">
                 <span className="text-sm text-primary/85 flex-1 min-w-0 overflow-x-auto whitespace-pre">
                   <span className="text-secondary/35 select-none mr-1.5">$</span>{primaryDisplayCommand}
@@ -340,12 +371,12 @@ export default function NewInvestigationPage() {
                   {copied ? (
                     <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>Copied</>
                   ) : (
-                    <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>Copy</>
+                    <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>Copy</>
                   )}
                 </button>
               </div>
               <p className="text-xs text-secondary/45 mt-1.5 leading-relaxed">
-                Click <strong className="text-secondary/70">Copy</strong>, then paste the command into your terminal and run it from your project root. The copied command securely includes your authentication credentials.
+                Click <strong className="text-secondary/70">Copy</strong> to grab the setup commands, paste them into your terminal, then run your investigation from the project root. (These commands securely set variables for your current terminal session).
               </p>
             </div>
           ) : (

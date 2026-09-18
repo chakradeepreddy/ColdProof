@@ -14,7 +14,7 @@ const program = new Command();
 program
   .name('coldproof')
   .description('ColdProof: Execution-based environment causality debugger')
-  .version('0.1.1');
+  .version('0.1.4');
 
 program
   .command('run')

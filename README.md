@@ -91,7 +91,7 @@ The ColdProof CLI executes the experiments locally on the developer's machine.
 The ColdProof CLI is publicly published as the `coldproof` npm package, so developers can install it directly from their terminal.
 
 ```bash
-npm install -g coldproof@0.1.1
+npm install -g coldproof@0.1.4
 ```
 
 After installation, verify it with:
@@ -102,7 +102,7 @@ coldproof --help
 
 The CLI performs the investigation locally, while the ColdProof web application stores and visualizes the resulting evidence.
 
-> **Current CLI version:** `0.1.0`
+> **Current CLI version:** `0.1.4`
 
 ### Available Commands
 
@@ -266,7 +266,7 @@ The unknown-project validation was designed to test whether ColdProof can operat
 - **Execution:** Currently requires Docker to be installed and running locally for the clean environment.
 - **Ecosystem:** The clean environment currently defaults to a `node:22-slim` Docker image, making it primarily suited for Node.js/npm-based projects.
 - **Candidate Detection:** Project-local executable detection is currently tied to `node_modules/.bin`. Executable PATH blocking is limited to a specific allowlist of common binaries.
-- **Platform:** Tested primarily on macOS/Linux. Windows compatibility is currently untested.
+- **Platform:** ColdProof currently supports macOS, Linux, and Windows.
 
 ## Project Structure
 
