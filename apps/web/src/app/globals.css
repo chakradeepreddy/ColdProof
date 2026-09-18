@@ -183,6 +183,25 @@
   to { transform: rotate(360deg); }
 }
 
+/* ─── Logo micro-interaction ──────────────────────────────────────── */
+@keyframes logo-spin-load {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes logo-spin-hover {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-logo-spin {
+    animation: logo-spin-load 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .group:hover .animate-logo-spin {
+    animation: logo-spin-hover 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
 /* ─── Terminal output ─────────────────────────────────────────────── */
 .terminal-fail-line {
   color: var(--color-fail);

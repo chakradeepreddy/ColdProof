@@ -54,7 +54,7 @@ export default function Navbar() {
       <div className="flex items-center gap-8">
         {/* Wordmark */}
         <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-          <span className="text-experiment transition-all duration-200 group-hover:opacity-80 group-hover:scale-105">
+          <span className="text-experiment transition-all duration-200 group-hover:opacity-80 group-hover:scale-105 animate-logo-spin">
             <LogoMark size={18} />
           </span>
           <span className="font-bold text-sm tracking-wide text-primary group-hover:text-primary/90 transition-colors duration-150">
