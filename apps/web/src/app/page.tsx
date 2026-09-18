@@ -238,16 +238,22 @@ export default function DashboardPage() {
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
             {/* Left — identity + copy */}
             <div className="animate-slide-up">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-experiment/8 border border-experiment/20 rounded-full px-3 py-1 mb-7">
-                <LogoMark size={13} className="text-experiment" />
-                <span className="text-[10px] font-mono text-experiment/80 uppercase tracking-[0.2em]">Execution-based environment causality debugger</span>
+              {/* Hero Logo */}
+              <div className="mb-6 inline-block group cursor-default">
+                <div className="text-experiment animate-logo-spin transition-opacity duration-200 group-hover:opacity-80">
+                  <LogoMark size={42} />
+                </div>
               </div>
 
               {/* Headline */}
-              <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight leading-[1.05] mb-5">
+              <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight leading-[1.05] mb-4">
                 ColdProof
               </h1>
+
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 bg-experiment/8 border border-experiment/20 rounded-full px-3 py-1 mb-7">
+                <span className="text-[10px] font-mono text-experiment/80 uppercase tracking-[0.2em]">Execution-based environment causality debugger</span>
+              </div>
               <p className="text-base text-secondary leading-relaxed mb-3">
                 Don&apos;t just show me what&apos;s different.
               </p>

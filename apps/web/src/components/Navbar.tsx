@@ -7,7 +7,7 @@ import { firebaseSignOut } from '@/lib/firebase';
 import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 
-function LogoMark({ size = 18 }: { size?: number }) {
+export function LogoMark({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2L21 7V17L12 22L3 17V7L12 2Z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
@@ -54,7 +54,7 @@ export default function Navbar() {
       <div className="flex items-center gap-8">
         {/* Wordmark */}
         <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-          <span className="text-experiment transition-all duration-200 group-hover:opacity-80 group-hover:scale-105 animate-logo-spin">
+          <span className="text-experiment transition-all duration-200 group-hover:opacity-80 group-hover:scale-105">
             <LogoMark size={18} />
           </span>
           <span className="font-bold text-sm tracking-wide text-primary group-hover:text-primary/90 transition-colors duration-150">
