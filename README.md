@@ -82,24 +82,55 @@ A deep-dive view into a specific investigation. It shows:
 - **Evidence Result** (The final deterministic classification)
 - **AI Explanation** (An optional, plain-English translation of the deterministic result)
 
+```markdown
 ## The ColdProof CLI
 
-The ColdProof CLI executes the experiments on your machine.
+The ColdProof CLI executes the experiments locally on the developer's machine.
 
-**Available Commands:**
-- `coldproof run <command>`: Runs a command and captures execution telemetry (optionally with `-c` for clean execution).
+### Published on npm
+
+The ColdProof CLI is publicly published as the `coldproof` npm package, so developers can install it directly from their terminal.
+
+```bash
+npm install -g coldproof
+```
+
+After installation, verify it with:
+
+```bash
+coldproof --help
+```
+
+The CLI performs the investigation locally, while the ColdProof web application stores and visualizes the resulting evidence.
+
+> **Current CLI version:** `0.1.0`
+
+### Available Commands
+
+- `coldproof run <command>`: Runs a command and captures execution telemetry, optionally using `-c` for clean execution.
 - `coldproof compare <command>`: Compares execution of a command between warm and clean environments.
-- `coldproof investigate <command>`: The main workflow. Compares environments, identifies candidates, performs perturbations, and uploads the results.
+- `coldproof investigate <command>`: The main workflow. It compares environments, identifies candidates, performs controlled perturbations, classifies the evidence, and uploads the result.
 
 ### Choosing Your Project Command
 
-**ColdProof does not randomly choose a command.** You must supply a real command used by your project. 
+**ColdProof does not randomly choose a command. You must supply a real command used by your project.**
 
-For example, if you are investigating a build failure in a Node.js project, check your `package.json` scripts and run:
+For example, if you are investigating a build failure in a Node.js project, check the `scripts` section of your `package.json` and run:
+
 ```bash
 coldproof investigate "npm run build"
 ```
-*Bring the command your project actually uses.*
+
+For a type-checking workflow, the command could instead be:
+
+```bash
+coldproof investigate "npm run typecheck"
+```
+
+These are examples only. Use the command that your project actually uses and that reproduces the behavior you want to investigate.
+
+> **Bring the command your project actually uses.**
+```
 
 ## Architecture
 
