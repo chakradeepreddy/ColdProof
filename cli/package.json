@@ -1,6 +1,6 @@
 {
   "name": "coldproof",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ColdProof: Execution-based environment causality debugger",
   "bin": {
     "coldproof": "dist/index.js"
