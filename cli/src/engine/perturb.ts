@@ -172,6 +172,9 @@ export async function perturbCandidate(
       } else if (sameExitCode) {
         classification = 'STRONG_EVIDENCE';
         explanation = 'Removing this local dependency reproduced a similar failure in the warm environment.';
+      } else if (didCandidateFailureDisappear(clean, perturbedWarm, candidate.name)) {
+        classification = 'PARTIAL_EVIDENCE';
+        explanation = 'Removing this local dependency caused the original failure to disappear, but the command failed for another reason.';
       } else {
         classification = 'NOT_IMPLICATED';
         explanation = 'Perturbed environment failed, but the exit code did not match the clean environment.';
@@ -218,6 +221,9 @@ export async function perturbCandidate(
       } else if (sameExitCode) {
         classification = 'STRONG_EVIDENCE';
         explanation = 'Blocking the candidate reproduced a failure with the same exit boundary as the clean run, but the failure text differs.';
+      } else if (didCandidateFailureDisappear(clean, perturbedWarm, candidate.name)) {
+        classification = 'PARTIAL_EVIDENCE';
+        explanation = 'Blocking the candidate caused the original failure to disappear, but the command failed for another reason.';
       } else {
         classification = 'NOT_IMPLICATED';
         explanation = 'Perturbed environment failed, but the exit code did not match the clean environment.';
