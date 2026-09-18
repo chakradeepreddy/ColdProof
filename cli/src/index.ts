@@ -8,13 +8,14 @@ import { compareExecutions } from './engine/compare.js';
 import { detectCandidates } from './engine/candidates.js';
 import { perturbCandidate } from './engine/perturb.js';
 
+const { version } = require('../package.json');
 
 const program = new Command();
 
 program
   .name('coldproof')
   .description('ColdProof: Execution-based environment causality debugger')
-  .version('0.1.4');
+  .version(version);
 
 program
   .command('run')
