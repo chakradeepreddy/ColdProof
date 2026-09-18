@@ -10,3 +10,7 @@ coverage/
 *.log
 .coldproof/
 tsconfig.tsbuildinfo
+
+# Documentation (kept local only)
+docs/
+COLDPROOF_PROGRESS.md
