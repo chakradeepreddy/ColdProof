@@ -240,8 +240,8 @@ export default function NewInvestigationPage() {
         <div className="px-5 py-4 border-b border-border bg-elevated/10 flex items-center gap-3">
           <StepNum n={2} />
           <div>
-            <h2 className="text-sm font-bold text-primary">What command normally fails?</h2>
-            <p className="text-xs text-secondary/60 mt-0.5">Your regular build, test, or CI command</p>
+            <h2 className="text-sm font-bold text-primary">What command should ColdProof investigate?</h2>
+            <p className="text-xs text-secondary/60 mt-0.5">Enter a real build, test, typecheck, or CI command used by this project.</p>
           </div>
         </div>
         <div className="p-5">
@@ -256,12 +256,40 @@ export default function NewInvestigationPage() {
               autoFocus
             />
           </div>
-          <div className="flex gap-2 mt-2.5 flex-wrap">
+          
+          <div className="mt-4 text-xs text-secondary/60 leading-relaxed">
+            <p className="mb-2">
+              <strong className="text-secondary/80 font-medium">Not sure which command to use?</strong><br/>
+              Open your project&apos;s <code className="bg-elevated border border-border/40 px-1 py-0.5 rounded text-[10px] font-mono text-secondary/70">package.json</code> and check the &apos;scripts&apos; section. Choose the command you normally use to build, test, lint, or type-check your project.
+            </p>
+            <p className="mb-3">
+              <strong className="text-experiment/90 font-medium">Important:</strong> Don&apos;t randomly pick a command. Use a command that actually belongs to your project and runs successfully in your normal environment.
+            </p>
+            
+            <details className="group mb-4 cursor-pointer">
+              <summary className="text-[11px] text-primary/70 hover:text-primary transition-colors select-none font-medium outline-none inline-flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="group-open:rotate-90 transition-transform text-secondary/40">
+                  <path d="M3.5 2L7 5L3.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                How do I find mine?
+              </summary>
+              <div className="mt-2.5 ml-1.5 pl-3 border-l border-border/60 space-y-1.5 text-[11px] text-secondary/50">
+                <p>1. Open <code className="font-mono bg-elevated/50 px-1 rounded text-[10px]">package.json</code></p>
+                <p>2. Find <code className="font-mono bg-elevated/50 px-1 rounded text-[10px]">&quot;scripts&quot;</code></p>
+                <p>3. Look for build, test, typecheck, or lint</p>
+                <p>4. Run the command normally once to confirm it works</p>
+                <p>5. Enter that same command here</p>
+              </div>
+            </details>
+          </div>
+
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/30 flex-wrap">
+            <span className="text-[10px] text-secondary/40 uppercase tracking-[0.16em] font-mono mr-2">Common examples:</span>
             {['npm run build', 'npm test', 'npm run typecheck'].map(ex => (
               <button
                 key={ex}
                 onClick={() => setCommand(ex)}
-                className="text-xs font-mono text-secondary/50 hover:text-primary bg-elevated hover:bg-border/40 border border-border/40 px-2 py-0.5 rounded transition-colors duration-150"
+                className="text-xs font-mono text-secondary/50 hover:text-primary bg-elevated/50 hover:bg-border/40 border border-border/40 px-2 py-1 rounded transition-colors duration-150"
               >
                 {ex}
               </button>
