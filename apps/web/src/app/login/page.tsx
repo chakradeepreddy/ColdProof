@@ -156,13 +156,10 @@ export default function LoginPage() {
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 border-r border-border px-12 py-14 relative overflow-hidden">
         {/* Subtle grid background */}
         <div
-          className="absolute inset-0 opacity-[0.035]"
+          className="absolute inset-0 opacity-[0.4]"
           style={{
-            backgroundImage: `
-              radial-gradient(circle, var(--color-border) 1px, transparent 1px),
-              radial-gradient(circle, var(--color-border) 1px, transparent 1px)
-            `,
-            backgroundSize: '4px 32px, 32px 4px',
+            backgroundImage: `radial-gradient(circle, var(--color-border) 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
           }}
         />
         {/* Subtle radial fade over grid */}
