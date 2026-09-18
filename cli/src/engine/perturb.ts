@@ -21,10 +21,22 @@ export function normalizeOutput(text: string): string {
   return normalized.trim();
 }
 
-export function analyzeFailureSignatures(clean: ExecutionResult, perturbed: ExecutionResult): { sameExitCode: boolean, failureOutputComparable: boolean } {
+export function isMissingCommandError(stderr: string, candidateName: string): boolean {
+  const out = stderr.toLowerCase();
+  const target = candidateName.toLowerCase();
+  const missingIndicators = [
+    `${target}: not found`,
+    `${target}: command not found`,
+    `'${target}' is not recognized`,
+    `spawn ${target} enoent`
+  ];
+  return missingIndicators.some(indicator => out.includes(indicator));
+}
+
+export function analyzeFailureSignatures(clean: ExecutionResult, perturbed: ExecutionResult, candidateName?: string): { sameExitCode: boolean, failureOutputComparable: boolean, equivalentMissingBoundary: boolean } {
   // If either succeeded, it's not a failure signature match
   if (clean.exitCode === 0 || perturbed.exitCode === 0) {
-    return { sameExitCode: false, failureOutputComparable: false };
+    return { sameExitCode: false, failureOutputComparable: false, equivalentMissingBoundary: false };
   }
 
   const sameExitCode = clean.exitCode === perturbed.exitCode;
@@ -40,7 +52,11 @@ export function analyzeFailureSignatures(clean: ExecutionResult, perturbed: Exec
     (cleanStderr.length > 0 && perturbedStderr.includes(cleanStderr)) ||
     (perturbedStderr.length > 0 && cleanStderr.includes(perturbedStderr));
 
-  return { sameExitCode, failureOutputComparable };
+  const equivalentMissingBoundary = candidateName 
+    ? (isMissingCommandError(cleanStderr, candidateName) && isMissingCommandError(perturbedStderr, candidateName))
+    : false;
+
+  return { sameExitCode, failureOutputComparable, equivalentMissingBoundary };
 }
 
 import { executeCleanCommand } from './executeClean.js';
@@ -137,7 +153,7 @@ export async function perturbCandidate(
       console.log(`   ✓ Perturbation applied`);
 
       perturbedFailed = perturbedWarm.exitCode !== 0;
-      const analysis = analyzeFailureSignatures(clean, perturbedWarm);
+      const analysis = analyzeFailureSignatures(clean, perturbedWarm, candidate.name);
       sameExitCode = analysis.sameExitCode;
       failureOutputComparable = analysis.failureOutputComparable;
 
@@ -147,6 +163,9 @@ export async function perturbCandidate(
       } else if (!perturbedFailed) {
         classification = 'NOT_IMPLICATED';
         explanation = 'Perturbed environment succeeded, meaning this candidate is not the cause of the failure.';
+      } else if (analysis.equivalentMissingBoundary) {
+        classification = 'STRONG_EVIDENCE';
+        explanation = 'Removing this local dependency reproduced an equivalent "command not found" failure across platform boundaries.';
       } else if (sameExitCode && failureOutputComparable) {
         classification = 'CONFIRMED';
         explanation = 'Removing this local dependency reproduced the exact failure in the warm environment.';
@@ -160,24 +179,27 @@ export async function perturbCandidate(
 
     } else {
       // EXECUTABLE (PATH Blocking Shim in warm environment)
-      const shimPath = path.join(tmpDir, candidate.name);
-      // Write a blocking shim that mimics a 'not found' error with exit code 127
-      const shimScript = `#!/bin/sh
-echo "coldproof: executable '${candidate.name}' blocked by perturbation" >&2
-exit 127
-`;
-      fs.writeFileSync(shimPath, shimScript, { mode: 0o755 });
+      if (process.platform === 'win32') {
+        const shimPath = path.join(tmpDir, `${candidate.name}.cmd`);
+        const shimScript = `@echo off\r\necho coldproof: executable '${candidate.name}' blocked by perturbation 1>&2\r\nexit /b 127\r\n`;
+        fs.writeFileSync(shimPath, shimScript);
+      } else {
+        const shimPath = path.join(tmpDir, candidate.name);
+        const shimScript = `#!/bin/sh\necho "coldproof: executable '${candidate.name}' blocked by perturbation" >&2\nexit 127\n`;
+        fs.writeFileSync(shimPath, shimScript, { mode: 0o755 });
+      }
 
       console.log(`\n   Blocking ${candidate.name} in warm environment...`);
 
       // Execute with shimmed PATH
-      const customEnv = { ...process.env, PATH: `${tmpDir}:${process.env.PATH}` };
+      const customEnv = { ...process.env };
+      customEnv.PATH = `${tmpDir}${path.delimiter}${process.env.PATH}`;
       perturbedWarm = await executeCommand(command, customEnv);
 
       console.log(`   ✓ Perturbation applied`);
 
       perturbedFailed = perturbedWarm.exitCode !== 0;
-      const analysis = analyzeFailureSignatures(clean, perturbedWarm);
+      const analysis = analyzeFailureSignatures(clean, perturbedWarm, candidate.name);
       sameExitCode = analysis.sameExitCode;
       failureOutputComparable = analysis.failureOutputComparable;
 
@@ -187,6 +209,9 @@ exit 127
       } else if (!perturbedFailed) {
         classification = 'NOT_IMPLICATED';
         explanation = 'Perturbed environment succeeded, meaning this candidate is not the cause of the failure.';
+      } else if (analysis.equivalentMissingBoundary) {
+        classification = 'STRONG_EVIDENCE';
+        explanation = 'Blocking the candidate reproduced an equivalent "command not found" failure across platform boundaries.';
       } else if (sameExitCode && failureOutputComparable) {
         classification = 'CONFIRMED';
         explanation = 'Perturbation successfully reproduced both the exit code and failure output of the clean environment.';

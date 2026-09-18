@@ -76,26 +76,32 @@ export async function detectCandidates(command: string, projectPath: string, cle
       // Find the absolute path to the real binary on the host
       let realPath = '';
       try {
-        realPath = (await execAsync(`which ${bin}`)).stdout.trim();
+        const cmd = process.platform === 'win32' ? `where ${bin}` : `which ${bin}`;
+        const output = (await execAsync(cmd)).stdout.trim();
+        realPath = output.split('\n')[0].trim();
       } catch {
         continue; // If it's not even on the host, no need to shim it
       }
       
       if (!realPath) continue;
 
-      const shimPath = path.join(tmpDir, bin);
-      const shimScript = `#!/usr/bin/env bash
-echo "${bin}" >> "${logFile}"
-exec "${realPath}" "$@"
-`;
-      fs.writeFileSync(shimPath, shimScript, { mode: 0o755 });
+      if (process.platform === 'win32') {
+        const shimPath = path.join(tmpDir, `${bin}.cmd`);
+        const shimScript = `@echo off\r\necho ${bin} >> "${logFile}"\r\n"${realPath}" %*\r\n`;
+        fs.writeFileSync(shimPath, shimScript);
+      } else {
+        const shimPath = path.join(tmpDir, bin);
+        const shimScript = `#!/usr/bin/env bash\necho "${bin}" >> "${logFile}"\nexec "${realPath}" "$@"\n`;
+        fs.writeFileSync(shimPath, shimScript, { mode: 0o755 });
+      }
     }
 
     // Execute with shimmed PATH
     console.log('\n[ColdProof] Re-executing command on host to gather invocation telemetry (instrumentation pass)...');
-    const env = { ...process.env, PATH: `${tmpDir}:${process.env.PATH}` };
+    const customEnv = { ...process.env };
+    customEnv.PATH = `${tmpDir}${path.delimiter}${process.env.PATH}`;
     await new Promise((resolve) => {
-      const child = spawn(command, { shell: true, env, stdio: 'ignore' });
+      const child = spawn(command, { shell: true, env: customEnv, stdio: 'ignore' });
       child.on('close', resolve);
       child.on('error', resolve);
     });
