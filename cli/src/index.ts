@@ -331,8 +331,11 @@ Guidance:
       console.log(chalk.gray('\n8. Telemetry\n'));
       const spinner = ora('Uploading investigation results to ColdProof Cloud...').start();
       try {
+        const projectName = require('path').basename(process.cwd());
+        
         const payload = {
           projectId,
+          projectName,
           command,
           comparison,
           candidates: comparison.classification === 'WARM_PASS_CLEAN_FAIL' ? detectedCandidates : [],

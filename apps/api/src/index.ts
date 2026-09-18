@@ -244,9 +244,10 @@ fastify.post('/api/projects', { preHandler: authenticate }, async (request, repl
 
 const investigationBodySchema = {
   type: 'object',
-  required: ['projectId', 'command', 'comparison', 'candidates'],
+  required: ['projectId', 'command', 'comparison'],
   properties: {
     projectId: { type: 'string' },
+    projectName: { type: 'string' },
     command: { type: 'string' },
     comparison: {
       type: 'object',
@@ -258,19 +259,8 @@ const investigationBodySchema = {
         classification: { type: 'string' },
       }
     },
-    candidates: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['id', 'type', 'name', 'reason']
-      }
-    },
-    perturbationResult: {
-      type: ['object', 'null'],
-      properties: {
-        evidence: { type: 'object' }
-      }
-    }
+    candidates: { type: 'array' },
+    perturbationResult: { type: 'object', nullable: true },
   }
 };
 
@@ -289,7 +279,7 @@ fastify.post('/api/investigations', {
   });
 
   if (!project || project.userId !== userId) {
-    return reply.status(404).send({ error: 'Project not found' });
+    return reply.status(403).send({ error: 'Project access denied' });
   }
 
   // Generate AI explanation asynchronously if Groq is configured
@@ -306,6 +296,7 @@ fastify.post('/api/investigations', {
   const investigation = await prisma.investigation.create({
     data: {
       projectId: body.projectId,
+      projectName: body.projectName || null,
       command: body.command,
       comparison: body.comparison,
       candidates: body.candidates,

@@ -594,6 +594,12 @@ export default function InvestigationDetailPage() {
         <div className="mb-8 animate-slide-up">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
             <div>
+              <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-secondary/80 uppercase tracking-wider">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                {investigation.projectName || 'Project name unavailable'}
+              </div>
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <h1 className="text-2xl font-bold text-primary tracking-tight">Investigation</h1>
                 <span className={cn('px-2.5 py-0.5 text-xs font-bold rounded-full uppercase tracking-widest border', headerBadgeCls)}>

@@ -28,6 +28,7 @@ model Project {
 
 model Investigation {
   id             String          @id @default(uuid())
+  projectName    String?
   command        String
   projectId      String
   project        Project         @relation(fields: [projectId], references: [id])

@@ -193,6 +193,14 @@ function InvestigationCard({ inv, onDeleteClick }: { inv: any; onDeleteClick: ()
       borderAccent
     )}>
       <Link href={`/investigations/${inv.id}`} className="block px-5 py-4 pr-14">
+        {/* Project Name row */}
+        <div className="mb-2 text-xs font-semibold text-secondary/80 flex items-center gap-1.5 uppercase tracking-wider">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          {inv.projectName || 'Project name unavailable'}
+        </div>
+
         {/* Command row */}
         <div className="flex items-start justify-between gap-4 mb-3">
           <code className="font-mono text-sm bg-[#08090A] border border-border/50 px-3 py-1.5 rounded-md text-primary/90 max-w-[60%] truncate flex items-center gap-1.5">
