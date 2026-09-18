@@ -291,14 +291,26 @@ Guidance:
                console.log(`   ${chalk.cyan(targetCandidate.name)}: This candidate contributed to the observed failure, but the sole/root cause was not isolated.`);
                console.log(`\n   ${chalk.yellow('Note:')} The original failure disappeared and execution progressed further,`);
                console.log('   but a new failure occurred.');
-               console.log(chalk.yellow(`\n   Continuing investigation.`));
+               if (i < testableCandidates.length - 1) {
+                 console.log(chalk.yellow(`\n   Continuing investigation.`));
+               } else {
+                 console.log(chalk.yellow(`\n   Investigation complete. This candidate contributed to the observed failure, but the sole/root cause was not isolated. No additional candidates remain.`));
+               }
             } else {
                console.log(`   ${chalk.cyan(targetCandidate.name)}: This candidate is not supported as the environmental cause.`);
-               console.log(chalk.gray(`\n   Continuing investigation.`));
+               if (i < testableCandidates.length - 1) {
+                 console.log(chalk.gray(`\n   Continuing investigation.`));
+               } else {
+                 console.log(chalk.gray(`\n   Investigation complete. No additional candidates remain.`));
+               }
             }
           } else {
             console.log('   Perturbation failed or was not applied.');
-            console.log(chalk.gray(`\n   Continuing investigation.`));
+            if (i < testableCandidates.length - 1) {
+              console.log(chalk.gray(`\n   Continuing investigation.`));
+            } else {
+              console.log(chalk.gray(`\n   Investigation complete. No additional candidates remain.`));
+            }
           }
           console.log('\n----------------------------------------\n');
         }
