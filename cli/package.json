@@ -2,9 +2,7 @@
   "name": "coldproof",
   "version": "0.1.0",
   "description": "ColdProof: Execution-based environment causality debugger",
-  "bin": {
-    "coldproof": "./dist/index.js"
-  },
+  "bin": "./dist/index.js",
   "files": [
     "dist"
   ],
