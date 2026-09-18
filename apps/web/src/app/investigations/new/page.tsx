@@ -237,7 +237,7 @@ export default function NewInvestigationPage() {
         <div className="p-5 space-y-4">
           <div>
             <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Install</p>
-            <CommandBlock command="npm install -g coldproof@0.1.4" />
+            <CommandBlock command="npm install -g coldproof@0.1.5" />
           </div>
           <div>
             <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Verify CLI is on your PATH</p>

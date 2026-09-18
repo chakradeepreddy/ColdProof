@@ -91,7 +91,7 @@ The ColdProof CLI executes the experiments locally on the developer's machine.
 The ColdProof CLI is publicly published as the `coldproof` npm package, so developers can install it directly from their terminal.
 
 ```bash
-npm install -g coldproof@0.1.4
+npm install -g coldproof@0.1.5
 ```
 
 After installation, verify it with:
