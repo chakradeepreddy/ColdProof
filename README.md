@@ -123,6 +123,67 @@ Database (PostgreSQL)
 Web App UI (Next.js) + Optional Groq AI Explanation
 ```
 
+Each layer has a distinct responsibility: the CLI performs local experiments, the investigation engine performs causal analysis, the API persists results, PostgreSQL stores investigation history, and the web application visualizes the evidence. This separation keeps the causal engine independent from the presentation layer.
+
+## Key Technical Decisions
+
+### 1. Why a CLI?
+ColdProof needs access to the local command, local environment, installed executables, PATH, runtime, and Docker. A CLI is therefore the natural execution interface. Running this close to the developer's actual environment allows it to capture authentic "warm" telemetry rather than attempting to perfectly mock it in the cloud.
+
+### 2. Why warm vs clean execution?
+ColdProof does not simply compare configuration files. By executing the actual command in both environments, the system observes a behavioral difference (like a failing exit code) instead of relying only on static configuration differences.
+
+### 3. Why controlled perturbation?
+Environment difference ≠ environment cause. Simply finding that a dependency exists in one environment and not another does not prove that it caused the failure. ColdProof temporarily blocks or restores a candidate and reruns the same command. This turns environment debugging into an experiment, replacing guessing with proof.
+
+### 4. Why Docker for the clean environment?
+Docker provides reproducibility, isolation, and a clean baseline, avoiding contamination from the developer's machine while giving ColdProof control over the execution environment. (Note: The current MVP requires Docker to be running locally).
+
+### 5. Why deterministic evidence classification?
+ColdProof's investigation engine is the source of truth, not an LLM. The engine observes exit codes, execution results, logs, and perturbation results, and deterministically classifies the evidence. This makes the core causal classification reproducible and auditable.
+
+### 6. Why AI is only an explanation layer?
+Groq's LLM functionality is used exclusively to translate deterministic evidence into beginner-friendly language. AI does NOT decide causality, invent causes, override evidence, or determine the final classification. This is an intentional reliability and design decision to prevent hallucinations in causal debugging.
+
+### 7. Why PostgreSQL + Prisma?
+PostgreSQL and Prisma provide structured, maintainable persistence of users, projects, and investigations. This allows developers to maintain a historical archive of investigations and share them securely. 
+
+### 8. Why separate frontend/backend/CLI?
+This separation of concerns—CLI for local experimentation, API for ingestion, database for history, and frontend for visualization—improves maintainability. It allows the causal execution engine to be modified without impacting the web dashboard, and vice-versa.
+
+### 9. Security decisions
+- **Firebase Authentication**: Provides secure identity management without building custom auth.
+- **Token-based CLI authentication**: The `COLDPROOF_TOKEN` environment variable ensures telemetry is securely uploaded to the correct user.
+- **CORS configuration**: The API is restricted to the specific frontend domain via `CORS_ORIGIN`.
+- **Read-only execution**: During clean execution, the developer's source code is mounted as a read-only volume (`:ro`) inside the Docker container to prevent destructive modifications. Furthermore, source code remains entirely local and is never uploaded to the ColdProof API.
+
+### 10. Testing / validation decision
+ColdProof was validated against itself, QuickCart, RealityCheck, CodeJudge, and an unrelated black-box temporary project. The unrelated project was important because it proved that the engine could dynamically discover and investigate an unknown project, rather than relying on a hardcoded demo fixture.
+
+## Scalability
+
+While the current MVP demonstrates the core value of ColdProof, the architecture is designed to scale across multiple dimensions in the future:
+
+### 1. Execution Scalability
+The investigation engine currently performs local warm/clean execution sequentially. In a scaled version, the execution layer could evolve toward isolated cloud worker environments. Multiple investigations could be executed independently by workers, and candidate perturbations—since they are independent experiments—are naturally parallelizable. Scaling would involve resource limits, isolation boundaries, timeouts, and concurrency controls.
+
+### 2. Environment / Ecosystem Scalability
+The current MVP uses Docker with a Node-oriented (`node:22-slim`) clean environment. The execution abstraction is designed so that future extensions can support multiple runtime and container images (e.g., Python, Java, Go, Rust), dynamically mapping the clean environment to the user's technology stack.
+
+### 3. Candidate Detection Scalability
+The candidate detection system can be extended with additional specific detectors. While the current MVP detects specific executables, project-local binaries, node versions, and allowlisted environment variables, future extensions could detect filesystem state differences, package-manager lockfile drift, background services, and OS-level library differences.
+
+### 4. Backend Scalability
+The Fastify + PostgreSQL architecture can scale horizontally. As investigation volume grows, ingestion and API responsibilities can be cleanly separated from asynchronous processing queues.
+
+### 5. Storage Scalability
+Investigation telemetry (especially full stdout/stderr logs) can grow significantly. In the future, structured metadata can remain in PostgreSQL while large artifacts and log streams are offloaded to object/blob storage (e.g., AWS S3 or Google Cloud Storage).
+
+### 6. Perturbation Scalability
+As the number of detected candidates grows, testing every candidate sequentially becomes expensive. ColdProof's experimental model provides a natural path toward parallel independent perturbation experiments, candidate prioritization (testing highly likely causes first), resource budgets, and early stopping when sufficient causal evidence is obtained.
+
+ColdProof’s architecture separates execution, candidate detection, perturbation, evidence classification, persistence, and visualization, making each layer independently extensible as investigation volume and supported environments grow.
+
 ## Tech Stack
 
 | Layer | Technology | Purpose |
@@ -166,17 +227,17 @@ The unknown-project validation was designed to test whether ColdProof can operat
 
 ## Current MVP & Limitations
 
-**Current MVP Scope:**
-- Full CLI investigation engine (reproduce, detect, perturb, classify)
-- Web dashboard with Firebase authentication
-- Uploading and viewing investigation telemetry
-- Optional AI evidence translation
+**Currently Implemented in MVP:**
+- Full CLI investigation engine (reproduce, detect, perturb, classify).
+- Web dashboard with Firebase authentication.
+- Uploading and viewing investigation telemetry.
+- Optional AI evidence translation.
 
-**Current Limitations:**
-- **Execution:** Requires Docker to be installed and running locally for the clean environment.
+**Current Limitations & Future Extensions:**
+- **Execution:** Currently requires Docker to be installed and running locally for the clean environment.
 - **Ecosystem:** The clean environment currently defaults to a `node:22-slim` Docker image, making it primarily suited for Node.js/npm-based projects.
 - **Candidate Detection:** Project-local executable detection is currently tied to `node_modules/.bin`. Executable PATH blocking is limited to a specific allowlist of common binaries.
-- **Platform:** Tested primarily on macOS/Linux.
+- **Platform:** Tested primarily on macOS/Linux. Windows compatibility is currently untested.
 
 ## Project Structure
 
@@ -214,7 +275,3 @@ coldproof --help
 ## AI Development Disclosure
 
 AI tools including Claude and Gemini were used as development assistants for code generation, debugging, research, UI/UX refinement, and implementation support. As a solo developer, I designed the product concept and architecture, defined the investigation workflow and causal reasoning approach, made the key technical and product decisions, and reviewed and integrated the generated work. I independently tested and validated ColdProof through real-world project investigations and an unrelated unknown-project black-box test. The final implementation, testing, and submitted product were reviewed and verified by me rather than relying solely on AI-generated output.
-
-## License
-
-MIT
