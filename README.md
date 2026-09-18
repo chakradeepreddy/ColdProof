@@ -82,7 +82,6 @@ A deep-dive view into a specific investigation. It shows:
 - **Evidence Result** (The final deterministic classification)
 - **AI Explanation** (An optional, plain-English translation of the deterministic result)
 
-```
 ## The ColdProof CLI
 
 The ColdProof CLI executes the experiments locally on the developer's machine.
@@ -130,7 +129,6 @@ coldproof investigate "npm run typecheck"
 These are examples only. Use the command that your project actually uses and that reproduces the behavior you want to investigate.
 
 > **Bring the command your project actually uses.**
-```
 
 ## Architecture
 
