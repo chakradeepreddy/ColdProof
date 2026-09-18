@@ -189,13 +189,13 @@ function InvestigationCard({ inv, onDeleteClick }: { inv: any; onDeleteClick: ()
   return (
     <div className={cn(
       'group relative bg-surface border border-border rounded-lg overflow-hidden',
-      'hover:border-border/80 hover:bg-elevated/20 transition-all duration-200 animate-slide-up',
+      'hover:border-border/80 hover:bg-elevated/20 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all duration-200 animate-slide-up',
       borderAccent
     )}>
       <Link href={`/investigations/${inv.id}`} className="block px-5 py-4 pr-14">
         {/* Command row */}
         <div className="flex items-start justify-between gap-4 mb-3">
-          <code className="font-mono text-sm bg-[#08090A] border border-border/50 px-3 py-1.5 rounded-md text-primary/90 max-w-[55%] truncate flex items-center gap-1.5">
+          <code className="font-mono text-sm bg-[#08090A] border border-border/50 px-3 py-1.5 rounded-md text-primary/90 max-w-[60%] truncate flex items-center gap-1.5">
             <span className="text-secondary/40 select-none text-xs">$</span>
             {inv.command}
           </code>
@@ -292,6 +292,11 @@ export default function InvestigationsPage() {
           <div>
             <div className="flex items-center gap-2.5 mb-1.5">
               <span className="text-[10px] font-mono text-secondary/40 uppercase tracking-[0.16em]">Archive</span>
+              {!loadingData && investigations.length > 0 && (
+                <span className="text-[10px] font-mono text-experiment/60 bg-experiment/8 border border-experiment/20 px-2 py-0.5 rounded-full">
+                  {investigations.length} {investigations.length === 1 ? 'result' : 'results'}
+                </span>
+              )}
             </div>
             <h1 className="text-2xl font-bold text-primary tracking-tight">Investigations</h1>
             <p className="text-secondary/60 text-sm mt-1 leading-relaxed">

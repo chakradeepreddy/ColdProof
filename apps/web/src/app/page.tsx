@@ -237,7 +237,7 @@ export default function DashboardPage() {
         <div className="max-w-5xl mx-auto px-6 py-20 md:py-28 relative">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
             {/* Left — identity + copy */}
-            <div className="stagger-children">
+            <div>
               {/* Hero Logo */}
               <div className="mb-8 inline-flex items-center justify-center relative group cursor-default animate-slide-up" style={{ animationDelay: '0ms' }}>
                 {/* Thin technical ring & halo */}
@@ -564,20 +564,15 @@ export default function DashboardPage() {
                 The design is grounded in constraints that make it buildable, testable, and credible with real developer workflows.
               </p>
             </div>
-            <div className="grid gap-3">
+            <div className="space-y-0">
               {[
-                { title: 'Local execution', body: 'The engine runs where the developer is. No server-side sandbox infrastructure required.' },
-                { title: 'Docker for isolation', body: 'Clean environments are standard Docker containers. No proprietary sandboxing.' },
-                { title: 'No training dataset', body: 'Evidence classification is deterministic. No ML model to train, label, or maintain.' },
-                { title: 'Deterministic causal engine', body: 'The classify step uses exit-code comparison and output fingerprinting. Reproducible and auditable.' },
-                { title: 'AI is optional', body: 'Groq explains recorded evidence. If unavailable, investigation results are still complete.' },
-                { title: 'Existing ecosystem', body: 'Node.js, npm, Docker, PostgreSQL, Firebase, Express. No exotic dependencies.' },
-              ].map(({ title, body }) => (
-                <div key={title} className="bg-surface border border-border/50 rounded-lg p-4 hover:border-border/80 transition-colors duration-200">
-                  <p className="text-xs font-bold text-primary uppercase tracking-[0.12em] mb-1.5">{title}</p>
-                  <p className="text-xs text-secondary/60 leading-relaxed">{body}</p>
-                </div>
-              ))}
+                { label: 'Local execution', detail: 'The engine runs where the developer is. No server-side sandbox infrastructure required.' },
+                { label: 'Docker for clean isolation', detail: 'Clean environments are standard Docker containers. No proprietary sandboxing required.' },
+                { label: 'No training dataset required', detail: 'Evidence classification is deterministic. No ML model to train, label, or maintain.' },
+                { label: 'Deterministic causal engine', detail: 'The classify step uses exit-code comparison and output fingerprinting. Fully reproducible and auditable.' },
+                { label: 'AI is an optional layer', detail: 'Groq/Llama 3 explains the recorded evidence. If AI is unavailable, investigation results are still complete and accurate.' },
+                { label: 'Existing ecosystem only', detail: 'Node.js, npm, Docker, PostgreSQL, Firebase, Express. No exotic dependencies or proprietary infrastructure.' },
+              ].map(item => <CapabilityItem key={item.label} {...item} />)}
             </div>
           </div>
         </section>
@@ -658,15 +653,18 @@ export default function DashboardPage() {
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Link href="/investigations/new"
-                className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-150 shadow-sm hover:shadow-experiment/20 hover:shadow-md active:scale-[0.97]">
-                <svg className="w-4 h-4 transition-transform duration-150 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-[0_0_0_rgba(110,156,203,0)] hover:shadow-[0_4px_20px_-4px_rgba(110,156,203,0.4)] hover:-translate-y-0.5 active:translate-y-0">
+                <svg className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
                 </svg>
                 New Investigation
               </Link>
               <Link href="/investigations"
-                className="inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-border/80 transition-all duration-150">
-                View Evidence Archive →
+                className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
+                View Evidence Archive
+                <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
           </div>

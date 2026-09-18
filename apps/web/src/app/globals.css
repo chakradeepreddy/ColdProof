@@ -27,11 +27,15 @@
     border-color: var(--color-border);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-primary);
     font-family: var(--font-sans);
-    
+
     /* Layered technical background */
     background-image:
       /* Layer 4: Dark vignette toward the edges */
@@ -61,6 +65,14 @@
   .hover-glow-experiment:hover {
     box-shadow: 0 0 20px -5px rgba(110, 156, 203, 0.2);
     border-color: rgba(110, 156, 203, 0.3);
+  }
+  .hover-glow-pass:hover {
+    box-shadow: 0 0 20px -5px rgba(111, 175, 134, 0.2);
+    border-color: rgba(111, 175, 134, 0.3);
+  }
+  .hover-glow-evidence:hover {
+    box-shadow: 0 0 20px -5px rgba(208, 162, 83, 0.2);
+    border-color: rgba(208, 162, 83, 0.3);
   }
 }
 
@@ -94,13 +106,18 @@
 .animate-slide-up  { animation: slide-up   280ms var(--ease-snap, ease) both; }
 .animate-scale-in  { animation: scale-in   220ms var(--ease-snap, ease) both; }
 
-/* Stagger helpers */
-.stagger-children > *:nth-child(1) { animation-delay:  0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 55ms; }
-.stagger-children > *:nth-child(3) { animation-delay:110ms; }
-.stagger-children > *:nth-child(4) { animation-delay:165ms; }
-.stagger-children > *:nth-child(5) { animation-delay:220ms; }
-.stagger-children > *:nth-child(n+6) { animation-delay:275ms; }
+/* Stagger helpers — applies slide-up to direct children in sequence */
+.stagger-children > * {
+  animation: slide-up 280ms var(--ease-snap, ease) both;
+}
+.stagger-children > *:nth-child(1)  { animation-delay:   0ms; }
+.stagger-children > *:nth-child(2)  { animation-delay:  55ms; }
+.stagger-children > *:nth-child(3)  { animation-delay: 110ms; }
+.stagger-children > *:nth-child(4)  { animation-delay: 165ms; }
+.stagger-children > *:nth-child(5)  { animation-delay: 220ms; }
+.stagger-children > *:nth-child(6)  { animation-delay: 275ms; }
+.stagger-children > *:nth-child(7)  { animation-delay: 330ms; }
+.stagger-children > *:nth-child(n+8){ animation-delay: 385ms; }
 
 /* Scroll-reveal: hidden by default, JS adds .revealed */
 .reveal {
@@ -151,7 +168,9 @@
   .reveal,
   .reveal.revealed,
   .animate-pulse-node,
-  .skeleton-shimmer {
+  .skeleton-shimmer,
+  .animate-hero-logo,
+  .animate-connector {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
@@ -179,28 +198,23 @@
   animation: connector-pulse 2.4s ease-in-out infinite;
 }
 
-/* Subtle spinning ring */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* ─── Hero Logo micro-interaction ──────────────────────────────────────── */
 @keyframes hero-logo-load {
-  0% { transform: rotate(-120deg) scale(0.9); opacity: 0; filter: brightness(0.5); }
-  40% { opacity: 1; filter: brightness(1.2); }
-  60% { transform: rotate(10deg) scale(1.02); }
-  80% { transform: rotate(-2deg) scale(1); filter: brightness(1); }
-  100% { transform: rotate(0deg) scale(1); opacity: 1; filter: brightness(1); }
+  0%   { transform: rotate(-120deg) scale(0.88); opacity: 0;   filter: brightness(0.4); }
+  35%  { opacity: 1;  filter: brightness(1.15); }
+  65%  { transform: rotate(8deg)   scale(1.02); }
+  82%  { transform: rotate(-2deg)  scale(1);    filter: brightness(1); }
+  100% { transform: rotate(0deg)   scale(1);    opacity: 1;   filter: brightness(1); }
 }
 @keyframes hero-logo-hover {
-  0% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 0px transparent); }
-  50% { transform: rotate(180deg) scale(1.03); filter: drop-shadow(0 0 12px rgba(110,156,203,0.3)); }
-  100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 0px transparent); }
+  0%   { transform: rotate(0deg)   scale(1);    filter: drop-shadow(0 0 0px transparent); }
+  50%  { transform: rotate(180deg) scale(1.05); filter: drop-shadow(0 0 14px rgba(110,156,203,0.35)); }
+  100% { transform: rotate(360deg) scale(1);    filter: drop-shadow(0 0 0px transparent); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .animate-hero-logo {
-    animation: hero-logo-load 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation: hero-logo-load 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   }
   .group:hover .animate-hero-logo {
     animation: hero-logo-hover 1.6s ease-in-out forwards;
@@ -215,4 +229,11 @@
 .terminal-pass-line {
   color: var(--color-pass);
   opacity: 0.9;
+}
+
+/* ─── Focus ring (keyboard accessibility) ────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(110,156,203,0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
