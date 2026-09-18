@@ -237,48 +237,52 @@ export default function DashboardPage() {
         <div className="max-w-5xl mx-auto px-6 py-20 md:py-28 relative">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
             {/* Left — identity + copy */}
-            <div className="animate-slide-up">
+            <div className="stagger-children">
               {/* Hero Logo */}
-              <div className="mb-6 inline-block group cursor-default">
-                <div className="text-experiment animate-logo-spin transition-opacity duration-200 group-hover:opacity-80">
-                  <LogoMark size={42} />
+              <div className="mb-8 inline-flex items-center justify-center relative group cursor-default animate-slide-up" style={{ animationDelay: '0ms' }}>
+                {/* Thin technical ring & halo */}
+                <div className="absolute inset-0 rounded-full border border-experiment/15 bg-experiment/[0.02] scale-150 group-hover:scale-[1.8] transition-transform duration-1000 ease-out" />
+                <div className="absolute inset-0 rounded-full bg-experiment/10 blur-xl scale-[2] opacity-40 group-hover:opacity-80 transition-opacity duration-1000" />
+                <div className="relative text-experiment animate-hero-logo transition-opacity duration-300">
+                  <LogoMark size={44} />
                 </div>
               </div>
 
               {/* Headline */}
-              <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight leading-[1.05] mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight leading-[1.05] mb-4 animate-slide-up" style={{ animationDelay: '80ms' }}>
                 ColdProof
               </h1>
 
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-experiment/8 border border-experiment/20 rounded-full px-3 py-1 mb-7">
+              <div className="inline-flex items-center gap-2 bg-experiment/8 border border-experiment/20 rounded-full px-3 py-1 mb-7 animate-slide-up" style={{ animationDelay: '160ms' }}>
                 <span className="text-[10px] font-mono text-experiment/80 uppercase tracking-[0.2em]">Execution-based environment causality debugger</span>
               </div>
-              <p className="text-base text-secondary leading-relaxed mb-3">
+
+              <p className="text-base text-secondary leading-relaxed mb-3 animate-slide-up" style={{ animationDelay: '240ms' }}>
                 Don&apos;t just show me what&apos;s different.
               </p>
-              <p className="text-lg font-semibold text-primary/90 leading-relaxed mb-8">
+              <p className="text-lg font-semibold text-primary/90 leading-relaxed mb-8 animate-slide-up" style={{ animationDelay: '320ms' }}>
                 Show me which difference <span className="text-experiment">changed the result.</span>
               </p>
 
               {/* Problem statement */}
-              <p className="text-sm text-secondary/70 leading-relaxed mb-10 max-w-sm border-l border-border/50 pl-4">
+              <p className="text-sm text-secondary/70 leading-relaxed mb-10 max-w-sm border-l border-border/50 pl-4 animate-slide-up" style={{ animationDelay: '400ms' }}>
                 A command works on your machine but fails in CI, Docker, or a colleague&apos;s environment. ColdProof reproduces the behavior, finds environmental differences, tests each candidate, and produces structured evidence.
               </p>
 
               {/* CTAs */}
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap animate-slide-up" style={{ animationDelay: '480ms' }}>
                 <Link href="/investigations/new"
-                  className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-150 shadow-sm hover:shadow-experiment/20 hover:shadow-md active:scale-[0.97]">
-                  <svg className="w-4 h-4 transition-transform duration-150 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-[0_0_0_rgba(110,156,203,0)] hover:shadow-[0_4px_20px_-4px_rgba(110,156,203,0.4)] hover:-translate-y-0.5 active:translate-y-0">
+                  <svg className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
                   </svg>
                   New Investigation
                 </Link>
                 <Link href="/investigations"
-                  className="inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-border/80 bg-elevated/30 hover:bg-elevated/60 transition-all duration-150">
+                  className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
                   View Investigations
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
@@ -286,37 +290,37 @@ export default function DashboardPage() {
             </div>
 
             {/* Right — pipeline preview */}
-            <div className="animate-slide-up flex flex-col items-center" style={{ animationDelay: '120ms' }}>
-              <div className="w-full max-w-xs mx-auto bg-surface border border-border/50 rounded-2xl p-6 relative overflow-hidden">
-                <div className="absolute inset-0" style={{
-                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)',
+            <div className="animate-slide-up flex flex-col items-center" style={{ animationDelay: '560ms' }}>
+              <div className="w-full max-w-xs mx-auto bg-surface border border-border/50 rounded-2xl p-6 relative overflow-hidden group hover:border-experiment/30 transition-colors duration-500 hover:shadow-[0_0_30px_-5px_rgba(110,156,203,0.1)]">
+                <div className="absolute inset-0 opacity-40 group-hover:opacity-100 transition-opacity duration-500" style={{
+                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
                   backgroundSize: '24px 24px',
                 }} />
                 <div className="relative space-y-0">
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-pass/8 border border-pass/20">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-pass/5 border border-pass/10 group-hover:bg-pass/10 group-hover:border-pass/20 transition-colors duration-300">
                     <span className="text-pass font-bold text-xs tracking-widest">WARM</span>
-                    <span className="text-pass/60 font-mono text-xs ml-auto">✓ PASS</span>
+                    <span className="text-pass/60 font-mono text-[10px] ml-auto">✓ PASS</span>
                   </div>
-                  <div className="flex items-center justify-center py-0.5">
-                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 animate-connector" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
+                  <div className="flex items-center justify-center py-1">
+                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 group-hover:bg-experiment/30 transition-colors duration-300" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5 group-hover:text-experiment/40 transition-colors duration-300" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-fail/8 border border-fail/20">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-fail/5 border border-fail/10 group-hover:bg-fail/10 group-hover:border-fail/20 transition-colors duration-300">
                     <span className="text-fail font-bold text-xs tracking-widest">CLEAN</span>
-                    <span className="text-fail/60 font-mono text-xs ml-auto">✗ FAIL</span>
+                    <span className="text-fail/60 font-mono text-[10px] ml-auto">✗ FAIL</span>
                   </div>
-                  <div className="flex items-center justify-center py-0.5">
-                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 animate-connector" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
+                  <div className="flex items-center justify-center py-1">
+                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 group-hover:bg-experiment/30 transition-colors duration-300" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5 group-hover:text-experiment/40 transition-colors duration-300" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-experiment/8 border border-experiment/20">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-experiment/5 border border-experiment/10 group-hover:bg-experiment/10 group-hover:border-experiment/30 transition-colors duration-300 shadow-[0_0_15px_rgba(110,156,203,0)] group-hover:shadow-[0_0_15px_rgba(110,156,203,0.1)]">
                     <span className="text-experiment font-bold text-xs tracking-widest">PERTURB</span>
-                    <span className="text-experiment/60 font-mono text-xs ml-auto">BLOCK tsc</span>
+                    <span className="text-experiment/60 font-mono text-[10px] ml-auto">BLOCK tsc</span>
                   </div>
-                  <div className="flex items-center justify-center py-0.5">
-                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 animate-connector" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
+                  <div className="flex items-center justify-center py-1">
+                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 group-hover:bg-experiment/30 transition-colors duration-300" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5 group-hover:text-experiment/40 transition-colors duration-300" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-evidence/8 border border-evidence/20">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-evidence/5 border border-evidence/10 group-hover:bg-evidence/10 group-hover:border-evidence/30 transition-colors duration-300">
                     <span className="text-evidence font-bold text-xs tracking-widest">PROVE</span>
-                    <span className="text-evidence/60 font-mono text-xs ml-auto">PARTIAL EVIDENCE</span>
+                    <span className="text-evidence/70 font-mono text-[10px] ml-auto">PARTIAL EVIDENCE</span>
                   </div>
                 </div>
                 <p className="text-[9px] text-secondary/25 font-mono uppercase tracking-[0.2em] text-center mt-5">example investigation</p>

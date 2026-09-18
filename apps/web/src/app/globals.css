@@ -32,19 +32,20 @@
     color: var(--color-primary);
     font-family: var(--font-sans);
     
-    /* Layered technical background — subtle grid, faint nodes, slight illumination */
+    /* Layered technical background */
     background-image:
-      /* Subtle radial illumination (top center) */
-      radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110, 156, 203, 0.04) 0%, transparent 70%),
-      /* Faint warm evidence accent (bottom left) */
-      radial-gradient(ellipse 50% 50% at 0% 100%, rgba(208, 162, 83, 0.015) 0%, transparent 60%),
-      /* Faint technical crosses */
-      linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px),
-      /* Dot matrix */
-      radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px, 16px 16px;
-    background-position: center, center, 32px 32px, 32px 32px, center;
+      /* Layer 4: Dark vignette toward the edges */
+      radial-gradient(circle at 50% 50%, transparent 35%, rgba(6,7,9,0.85) 100%),
+      /* Layer 3: Radial blue illumination around hero (top center) */
+      radial-gradient(ellipse 80% 60% at 50% 15%, rgba(110, 156, 203, 0.04) 0%, transparent 65%),
+      /* Layer 2: Slightly larger technical grid */
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px),
+      /* Layer 1: Extremely subtle fine grid */
+      linear-gradient(rgba(255,255,255,0.008) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.008) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 96px 96px, 96px 96px, 24px 24px, 24px 24px;
+    background-position: center, center, 48px 48px, 48px 48px, 0 0, 0 0;
     background-attachment: fixed;
   }
 }
@@ -183,22 +184,26 @@
   to { transform: rotate(360deg); }
 }
 
-/* ─── Logo micro-interaction ──────────────────────────────────────── */
-@keyframes logo-spin-load {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* ─── Hero Logo micro-interaction ──────────────────────────────────────── */
+@keyframes hero-logo-load {
+  0% { transform: rotate(-120deg) scale(0.9); opacity: 0; filter: brightness(0.5); }
+  40% { opacity: 1; filter: brightness(1.2); }
+  60% { transform: rotate(10deg) scale(1.02); }
+  80% { transform: rotate(-2deg) scale(1); filter: brightness(1); }
+  100% { transform: rotate(0deg) scale(1); opacity: 1; filter: brightness(1); }
 }
-@keyframes logo-spin-hover {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes hero-logo-hover {
+  0% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 0px transparent); }
+  50% { transform: rotate(180deg) scale(1.03); filter: drop-shadow(0 0 12px rgba(110,156,203,0.3)); }
+  100% { transform: rotate(360deg) scale(1); filter: drop-shadow(0 0 0px transparent); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .animate-logo-spin {
-    animation: logo-spin-load 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .animate-hero-logo {
+    animation: hero-logo-load 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   }
-  .group:hover .animate-logo-spin {
-    animation: logo-spin-hover 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .group:hover .animate-hero-logo {
+    animation: hero-logo-hover 1.6s ease-in-out forwards;
   }
 }
 
