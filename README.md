@@ -82,7 +82,7 @@ A deep-dive view into a specific investigation. It shows:
 - **Evidence Result** (The final deterministic classification)
 - **AI Explanation** (An optional, plain-English translation of the deterministic result)
 
-```markdown
+```
 ## The ColdProof CLI
 
 The ColdProof CLI executes the experiments locally on the developer's machine.
