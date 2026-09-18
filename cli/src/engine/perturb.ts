@@ -110,10 +110,42 @@ export async function perturbCandidate(
 
       const binPath = path.join(projectPath, 'node_modules', '.bin', candidate.name);
       let target = '';
+      
       try {
-        target = fs.readlinkSync(binPath);
+        const stats = fs.lstatSync(binPath);
+        if (stats.isSymbolicLink()) {
+          target = fs.readlinkSync(binPath);
+        } else {
+          // Windows: npm creates command shims rather than symlinks
+          let content = '';
+          try {
+            content = fs.readFileSync(binPath, 'utf8');
+          } catch (e: any) {
+            throw new Error(`Failed to read executable shim for ${candidate.name}: ${e.message}`);
+          }
+          
+          // The Unix shell shim (which npm always creates, even on Windows for bash) contains: "$basedir/../package/bin/file"
+          const shMatch = content.match(/"\$basedir\/([^"]+)"/);
+          if (shMatch && shMatch[1]) {
+            target = shMatch[1];
+          } else {
+            // Fallback to reading the .cmd batch file
+            try {
+              const cmdContent = fs.readFileSync(`${binPath}.cmd`, 'utf8');
+              // cmd shims contain: "%dp0%\..\package\bin\file"
+              const cmdMatch = cmdContent.match(/"%dp0%\\([^"]+)"/);
+              if (cmdMatch && cmdMatch[1]) {
+                target = cmdMatch[1].replace(/\\/g, '/');
+              } else {
+                throw new Error(`Could not parse symlink target from Windows shims for ${candidate.name}`);
+              }
+            } catch (e: any) {
+              throw new Error(`Could not parse symlink target from Windows shims for ${candidate.name}`);
+            }
+          }
+        }
       } catch (e: any) {
-        throw new Error(`Failed to read symlink for ${candidate.name}: ${e.message}`);
+        throw new Error(`Failed to read symlink/shim for ${candidate.name}: ${e.message}`);
       }
 
       let packageName = '';
