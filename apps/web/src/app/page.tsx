@@ -11,18 +11,25 @@ import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs: any[]) { return twMerge(clsx(inputs)); }
 
-// ─── Evidence badge ────────────────────────────────────────────────
-const EVIDENCE_MAP: Record<string, { cls: string; dot: string; label: string }> = {
-  CONFIRMED:         { cls: 'bg-pass/10 border-pass/40 text-pass',             dot: 'bg-pass',       label: 'Confirmed' },
-  STRONG_EVIDENCE:   { cls: 'bg-evidence/10 border-evidence/40 text-evidence', dot: 'bg-evidence',   label: 'Strong evidence' },
-  PARTIAL_EVIDENCE:  { cls: 'bg-evidence/10 border-evidence/30 text-evidence', dot: 'bg-evidence/70',label: 'Partial evidence' },
-  NOT_IMPLICATED:    { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/50', label: 'Not implicated' },
-  UNABLE_TO_TEST:    { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/40', label: 'Unable to test' },
+// ─── Evidence config ────────────────────────────────────────────────
+const EVIDENCE_MAP: Record<string, {
+  cls: string; dot: string; label: string; borderClass: string;
+}> = {
+  CONFIRMED:        { cls: 'bg-pass/10 border-pass/40 text-pass',               dot: 'bg-pass',        label: 'Confirmed',       borderClass: 'evidence-border-confirmed' },
+  STRONG_EVIDENCE:  { cls: 'bg-evidence/10 border-evidence/40 text-evidence',   dot: 'bg-evidence',    label: 'Strong evidence',  borderClass: 'evidence-border-strong' },
+  PARTIAL_EVIDENCE: { cls: 'bg-evidence/10 border-evidence/30 text-evidence',   dot: 'bg-evidence/70', label: 'Partial evidence', borderClass: 'evidence-border-partial' },
+  NOT_IMPLICATED:   { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/50',label: 'Not implicated',   borderClass: 'evidence-border-neutral' },
+  UNABLE_TO_TEST:   { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/40',label: 'Unable to test',   borderClass: 'evidence-border-neutral' },
 };
 
 function EvidenceBadge({ classification }: { classification?: string }) {
   if (!classification) return null;
-  const e = EVIDENCE_MAP[classification] ?? { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/40', label: classification };
+  const e = EVIDENCE_MAP[classification] ?? {
+    cls: 'bg-secondary/8 border-secondary/20 text-secondary',
+    dot: 'bg-secondary/40',
+    label: classification,
+    borderClass: 'evidence-border-neutral',
+  };
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide px-2.5 py-1 rounded-full border', e.cls)}>
       <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', e.dot)} />
@@ -34,7 +41,13 @@ function EvidenceBadge({ classification }: { classification?: string }) {
 function ClassificationBadge({ classification }: { classification?: string }) {
   if (!classification) return null;
   const diverged = classification === 'WARM_PASS_CLEAN_FAIL' || classification === 'WARM_FAIL_CLEAN_PASS';
-  const label = classification.replace(/_/g, ' ');
+  const label = {
+    WARM_PASS_CLEAN_FAIL: 'WARM ✓ / CLEAN ✗',
+    WARM_FAIL_CLEAN_PASS: 'WARM ✗ / CLEAN ✓',
+    BOTH_FAIL: 'BOTH ✗',
+    BOTH_PASS: 'BOTH ✓',
+  }[classification] ?? classification.replace(/_/g, ' ');
+
   return (
     <span className={cn(
       'text-xs font-mono tracking-wide px-2 py-0.5 rounded border',
@@ -52,23 +65,23 @@ function Timestamp({ createdAt }: { createdAt: string }) {
   const ist = toZonedTime(date, 'Asia/Kolkata');
   const full = format(ist, 'd MMM yyyy · h:mm a') + ' IST';
   const rel = formatDistanceToNow(date, { addSuffix: true });
-  return <span className="text-secondary/60 text-xs font-medium" title={full}>{rel}</span>;
+  return <span className="text-secondary/50 text-xs font-mono tabular-nums" title={full}>{rel}</span>;
 }
 
 // ─── Skeleton card ──────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="bg-surface border border-border rounded-lg px-5 py-4 animate-pulse">
+    <div className="bg-surface border border-border rounded-lg px-5 py-4 overflow-hidden relative">
       <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="h-7 w-48 bg-elevated rounded" />
-        <div className="h-6 w-28 bg-elevated rounded-full" />
+        <div className="h-7 w-52 rounded skeleton-shimmer" />
+        <div className="h-6 w-28 rounded-full skeleton-shimmer" />
       </div>
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          <div className="h-5 w-32 bg-elevated rounded" />
-          <div className="h-5 w-16 bg-elevated rounded" />
+          <div className="h-5 w-32 rounded skeleton-shimmer" />
+          <div className="h-5 w-16 rounded skeleton-shimmer" />
         </div>
-        <div className="h-4 w-20 bg-elevated rounded" />
+        <div className="h-4 w-20 rounded skeleton-shimmer" />
       </div>
     </div>
   );
@@ -76,16 +89,10 @@ function SkeletonCard() {
 
 // ─── Delete confirmation modal ──────────────────────────────────────
 function DeleteModal({
-  open,
-  investigationId,
-  onCancel,
-  onDeleted,
-  getToken,
+  open, investigationId, onCancel, onDeleted, getToken,
 }: {
-  open: boolean;
-  investigationId: string;
-  onCancel: () => void;
-  onDeleted: (id: string) => void;
+  open: boolean; investigationId: string;
+  onCancel: () => void; onDeleted: (id: string) => void;
   getToken: () => Promise<string | null>;
 }) {
   const [deleting, setDeleting] = useState(false);
@@ -93,11 +100,7 @@ function DeleteModal({
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (open) {
-      setError('');
-      setDeleting(false);
-      setTimeout(() => cancelRef.current?.focus(), 50);
-    }
+    if (open) { setError(''); setDeleting(false); setTimeout(() => cancelRef.current?.focus(), 50); }
   }, [open]);
 
   useEffect(() => {
@@ -108,81 +111,44 @@ function DeleteModal({
   }, [open, onCancel]);
 
   const handleDelete = async () => {
-    setDeleting(true);
-    setError('');
+    setDeleting(true); setError('');
     try {
       const token = await getToken();
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/investigations/${investigationId}`,
         { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
       );
-      if (res.ok) {
-        onDeleted(investigationId);
-      } else {
-        const body = await res.json().catch(() => ({}));
-        setError(body.error || 'Delete failed. Please try again.');
-        setDeleting(false);
-      }
-    } catch {
-      setError('Network error. Please try again.');
-      setDeleting(false);
-    }
+      if (res.ok) { onDeleted(investigationId); }
+      else { const body = await res.json().catch(() => ({})); setError(body.error || 'Delete failed. Please try again.'); setDeleting(false); }
+    } catch { setError('Network error. Please try again.'); setDeleting(false); }
   };
 
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-modal-title"
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-fade-in"
-        onClick={onCancel}
-      />
-      {/* Panel */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-fade-in" onClick={onCancel} />
       <div className="relative bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl animate-scale-in">
-        {/* Icon */}
         <div className="w-10 h-10 rounded-full bg-fail/10 border border-fail/25 flex items-center justify-center mb-4">
           <svg className="w-5 h-5 text-fail" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
         </div>
-
-        <h2 id="delete-modal-title" className="text-base font-bold text-primary mb-1.5">
-          Delete investigation?
-        </h2>
+        <h2 id="delete-modal-title" className="text-base font-bold text-primary mb-1.5">Delete investigation?</h2>
         <p className="text-sm text-secondary leading-relaxed mb-5">
           This will permanently remove this investigation and all its stored results. This action cannot be undone.
         </p>
-
-        {error && (
-          <p className="text-xs text-fail bg-fail/8 border border-fail/20 rounded p-2.5 mb-4">{error}</p>
-        )}
-
+        {error && <p className="text-xs text-fail bg-fail/8 border border-fail/20 rounded p-2.5 mb-4">{error}</p>}
         <div className="flex gap-3">
-          <button
-            ref={cancelRef}
-            onClick={onCancel}
-            disabled={deleting}
-            className="flex-1 px-4 py-2 rounded-lg border border-border text-sm font-medium text-secondary hover:text-primary hover:border-border/70 transition-colors disabled:opacity-50"
-          >
+          <button ref={cancelRef} onClick={onCancel} disabled={deleting}
+            className="flex-1 px-4 py-2 rounded-lg border border-border text-sm font-medium text-secondary hover:text-primary hover:border-border/70 transition-colors disabled:opacity-50">
             Cancel
           </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="flex-1 px-4 py-2 rounded-lg bg-fail/90 hover:bg-fail text-white text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-          >
+          <button onClick={handleDelete} disabled={deleting}
+            className="flex-1 px-4 py-2 rounded-lg bg-fail/90 hover:bg-fail text-white text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
             {deleting ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Deleting…
-              </>
+              <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Deleting…</>
             ) : 'Delete Investigation'}
           </button>
         </div>
@@ -193,10 +159,7 @@ function DeleteModal({
 
 // ─── Toast ──────────────────────────────────────────────────────────
 function Toast({ message, onDone }: { message: string; onDone: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 3000);
-    return () => clearTimeout(t);
-  }, [onDone]);
+  useEffect(() => { const t = setTimeout(onDone, 3000); return () => clearTimeout(t); }, [onDone]);
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
       <div className="bg-elevated border border-border/80 text-primary text-sm font-medium px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5">
@@ -219,9 +182,7 @@ export default function InvestigationsPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [toast, setToast] = useState('');
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [user, loading, router]);
+  useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
   useEffect(() => {
     async function fetchData() {
@@ -234,11 +195,8 @@ export default function InvestigationsPage() {
         );
         if (res.ok) setInvestigations(await res.json());
         else setError('Failed to fetch investigations.');
-      } catch {
-        setError('Network error while connecting to the API.');
-      } finally {
-        setLoadingData(false);
-      }
+      } catch { setError('Network error while connecting to the API.'); }
+      finally { setLoadingData(false); }
     }
     if (user && !loading) fetchData();
   }, [user, loading, getToken]);
@@ -249,9 +207,7 @@ export default function InvestigationsPage() {
     setToast('Investigation deleted.');
   }, []);
 
-  const wrappedGetToken = useCallback(async () => {
-    return await getToken();
-  }, [getToken]);
+  const wrappedGetToken = useCallback(async () => await getToken(), [getToken]);
 
   if (loading || !user) return null;
 
@@ -262,15 +218,15 @@ export default function InvestigationsPage() {
         <div className="flex items-start justify-between mb-8 animate-slide-up">
           <div>
             <h1 className="text-2xl font-bold text-primary tracking-tight">Investigations</h1>
-            <p className="text-secondary text-sm mt-1 leading-relaxed">
-              Controlled perturbation experiments for environment-dependent failures.
+            <p className="text-secondary/70 text-xs font-mono mt-1.5 tracking-[0.12em] uppercase">
+              Reproduce · Perturb · Prove
             </p>
           </div>
           <Link
             href="/investigations/new"
-            className="flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-150 shadow-sm hover:shadow-experiment/20 hover:shadow-md active:scale-[0.97] shrink-0"
+            className="group flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-150 shadow-sm hover:shadow-experiment/20 hover:shadow-md active:scale-[0.97] shrink-0"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 transition-transform duration-150 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
             </svg>
             New
@@ -310,7 +266,6 @@ export default function InvestigationsPage() {
         </div>
       </div>
 
-      {/* Delete modal */}
       <DeleteModal
         open={!!deleteTarget}
         investigationId={deleteTarget ?? ''}
@@ -318,8 +273,6 @@ export default function InvestigationsPage() {
         onDeleted={handleDeleted}
         getToken={wrappedGetToken}
       />
-
-      {/* Toast */}
       {toast && <Toast message={toast} onDone={() => setToast('')} />}
     </>
   );
@@ -330,17 +283,27 @@ function InvestigationCard({ inv, onDeleteClick }: { inv: any; onDeleteClick: ()
   const evidenceCls = inv.perturbation?.evidence?.classification;
   const candidateName = inv.perturbation?.candidate?.name || inv.candidates?.[0]?.name;
 
+  // Left-border accent class keyed to evidence
+  const borderAccent =
+    evidenceCls === 'CONFIRMED'       ? 'evidence-border-confirmed' :
+    evidenceCls === 'STRONG_EVIDENCE' ? 'evidence-border-strong' :
+    evidenceCls === 'PARTIAL_EVIDENCE'? 'evidence-border-partial' :
+                                        'evidence-border-neutral';
+
   return (
-    <div className="group relative bg-surface border border-border rounded-lg hover:border-experiment/30 hover:bg-elevated/30 transition-all duration-200 animate-slide-up">
+    <div className={cn(
+      'group relative bg-surface border border-border rounded-lg overflow-hidden',
+      'hover:border-border/80 hover:bg-elevated/20',
+      'transition-all duration-200 animate-slide-up',
+      borderAccent
+    )}>
       {/* Clickable area */}
-      <Link
-        href={`/investigations/${inv.id}`}
-        className="block px-5 py-4 pr-14"
-      >
+      <Link href={`/investigations/${inv.id}`} className="block px-5 py-4 pr-14">
         {/* Top row */}
         <div className="flex items-start justify-between gap-4 mb-3">
-          <code className="font-mono text-sm bg-[#08090A] border border-border/60 px-2.5 py-1 rounded text-primary max-w-[60%] truncate">
-            <span className="text-secondary/50 select-none">$ </span>{inv.command}
+          <code className="font-mono text-sm bg-[#08090A] border border-border/50 px-3 py-1.5 rounded-md text-primary/90 max-w-[62%] truncate flex items-center gap-1.5">
+            <span className="text-secondary/40 select-none text-xs">$</span>
+            {inv.command}
           </code>
           <EvidenceBadge classification={evidenceCls} />
         </div>
@@ -350,12 +313,16 @@ function InvestigationCard({ inv, onDeleteClick }: { inv: any; onDeleteClick: ()
           <div className="flex items-center gap-2 flex-wrap">
             <ClassificationBadge classification={inv.comparison?.classification} />
             {candidateName && (
-              <span className="font-mono text-primary/80 bg-elevated border border-border/50 px-2 py-0.5 rounded text-xs">
+              <span className="font-mono text-primary/70 bg-elevated border border-border/40 px-2 py-0.5 rounded text-xs">
                 {candidateName}
               </span>
             )}
           </div>
-          <Timestamp createdAt={inv.createdAt} />
+          <div className="flex items-center gap-2">
+            <Timestamp createdAt={inv.createdAt} />
+            {/* Hover arrow indicator */}
+            <span className="opacity-0 group-hover:opacity-100 text-secondary/40 transition-opacity duration-200 select-none" aria-hidden="true">→</span>
+          </div>
         </div>
       </Link>
 
@@ -363,7 +330,7 @@ function InvestigationCard({ inv, onDeleteClick }: { inv: any; onDeleteClick: ()
       <button
         onClick={(e) => { e.stopPropagation(); onDeleteClick(); }}
         aria-label="Delete investigation"
-        className="absolute top-3 right-3 p-1.5 rounded-md text-secondary/0 group-hover:text-secondary/40 hover:!text-fail hover:bg-fail/10 transition-all duration-150"
+        className="absolute top-3 right-3 p-1.5 rounded-md text-secondary/0 group-hover:text-secondary/30 hover:!text-fail hover:bg-fail/10 transition-all duration-150"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -374,19 +341,29 @@ function InvestigationCard({ inv, onDeleteClick }: { inv: any; onDeleteClick: ()
   );
 }
 
+// ─── ColdProof logo mark ────────────────────────────────────────────
+function LogoMark({ size = 20, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <path d="M12 2L21 7V17L12 22L3 17V7L12 2Z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
+      <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth="1.25" strokeDasharray="2 1.5" />
+      <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="1.25" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" />
+    </svg>
+  );
+}
+
 // ─── Empty state ────────────────────────────────────────────────────
 function EmptyState() {
   return (
     <div className="bg-surface border border-border rounded-xl p-14 text-center animate-slide-up">
-      <div className="w-12 h-12 mx-auto mb-5 rounded-full border border-border bg-elevated flex items-center justify-center">
-        <svg className="w-5 h-5 text-secondary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
+      <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-border/60 bg-elevated/50 flex items-center justify-center">
+        <LogoMark size={22} className="text-secondary/40" />
       </div>
-      <h3 className="text-base font-semibold text-primary mb-1.5">No investigations yet</h3>
-      <p className="text-secondary text-sm mb-6 max-w-xs mx-auto leading-relaxed">
-        Run your first ColdProof investigation to see experimental evidence here.
+      <h3 className="text-base font-semibold text-primary mb-2">No investigations yet</h3>
+      <p className="text-secondary/70 text-xs font-mono uppercase tracking-widest mb-1">Reproduce · Perturb · Prove</p>
+      <p className="text-secondary text-sm mb-6 max-w-xs mx-auto leading-relaxed mt-3">
+        Run your first investigation to see experimental evidence here.
       </p>
       <Link
         href="/investigations/new"

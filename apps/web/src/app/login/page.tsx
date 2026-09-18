@@ -43,12 +43,18 @@ function ExperimentFlow() {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-0 select-none pointer-events-none">
+    <div className="relative flex flex-col items-center gap-0 select-none pointer-events-none">
+      {/* Subtle radial glow behind flow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 120px 200px at 50% 50%, rgba(110,156,203,0.06) 0%, transparent 70%)',
+        }}
+      />
       {steps.map((step, i) => (
         <React.Fragment key={step.label}>
           <div
-            className={`flex flex-col items-center px-4 py-2.5 rounded-lg border ${step.bg} w-28 transition-all`}
-            style={{ animationDelay: `${600 + i * 120}ms` }}
+            className={`flex flex-col items-center px-4 py-2.5 rounded-lg border ${step.bg} w-28 transition-all duration-200 hover:scale-[1.02]`}
           >
             <span className={`text-xs font-bold uppercase tracking-widest ${step.color}`}>
               {step.label}
@@ -59,8 +65,8 @@ function ExperimentFlow() {
           </div>
           {i < steps.length - 1 && (
             <div className="flex flex-col items-center my-0.5">
-              <div className="w-px h-3 bg-border/50" />
-              <svg className="w-2.5 h-2.5 text-secondary/30 -mt-0.5" fill="currentColor" viewBox="0 0 10 10">
+              <div className="w-px h-3 bg-border/40 animate-connector" />
+              <svg className="w-2.5 h-2.5 text-secondary/25 -mt-0.5 animate-connector" fill="currentColor" viewBox="0 0 10 10">
                 <path d="M5 8L1 3h8L5 8z" />
               </svg>
             </div>
@@ -274,7 +280,7 @@ export default function LoginPage() {
                   <input
                     type="email"
                     autoFocus
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:border-experiment/60 transition-colors placeholder:text-secondary/40"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:border-experiment/50 focus:shadow-[0_0_0_2px_rgba(110,156,203,0.08)] transition-all duration-150 placeholder:text-secondary/40"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
@@ -285,7 +291,7 @@ export default function LoginPage() {
                   <label className="block text-xs font-medium text-secondary mb-1.5">Password</label>
                   <input
                     type="password"
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:border-experiment/60 transition-colors placeholder:text-secondary/40"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:border-experiment/50 focus:shadow-[0_0_0_2px_rgba(110,156,203,0.08)] transition-all duration-150 placeholder:text-secondary/40"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"

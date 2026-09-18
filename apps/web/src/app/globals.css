@@ -13,9 +13,13 @@
   --color-pass: #6FAF86;
   --color-fail: #C86B6B;
   --color-evidence: #D0A253;
+  --color-proof: #A78BFA;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Shared easing curve — snappy, technical */
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
@@ -27,11 +31,12 @@
     background-color: var(--color-background);
     color: var(--color-primary);
     font-family: var(--font-sans);
-    /* Subtle technical grid — barely perceptible, adds developer-tool depth */
+    /* Fine grid — barely visible at resting, creates depth */
     background-image:
-      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-    background-size: 32px 32px;
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(110, 156, 203, 0.04) 0%, transparent 60%),
+      linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
   }
 }
 
@@ -56,30 +61,64 @@
   to   { opacity: 1; transform: scale(1);    }
 }
 
-.animate-fade-in   { animation: fade-in    200ms ease both; }
-.animate-slide-up  { animation: slide-up   260ms ease both; }
-.animate-scale-in  { animation: scale-in   220ms ease both; }
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0;  }
+}
 
-/* Stagger helpers — applied to children via parent class */
+.animate-fade-in   { animation: fade-in    200ms ease both; }
+.animate-slide-up  { animation: slide-up   280ms var(--ease-snap, ease) both; }
+.animate-scale-in  { animation: scale-in   220ms var(--ease-snap, ease) both; }
+
+/* Stagger helpers */
 .stagger-children > *:nth-child(1) { animation-delay:  0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
-.stagger-children > *:nth-child(3) { animation-delay:120ms; }
-.stagger-children > *:nth-child(4) { animation-delay:180ms; }
-.stagger-children > *:nth-child(5) { animation-delay:240ms; }
-.stagger-children > *:nth-child(n+6) { animation-delay:300ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 55ms; }
+.stagger-children > *:nth-child(3) { animation-delay:110ms; }
+.stagger-children > *:nth-child(4) { animation-delay:165ms; }
+.stagger-children > *:nth-child(5) { animation-delay:220ms; }
+.stagger-children > *:nth-child(n+6) { animation-delay:275ms; }
 
 /* Scroll-reveal: hidden by default, JS adds .revealed */
 .reveal {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 350ms ease, transform 350ms ease;
+  transform: translateY(14px);
+  transition: opacity 380ms var(--ease-snap, ease), transform 380ms var(--ease-snap, ease);
 }
 .reveal.revealed {
   opacity: 1;
   transform: none;
 }
 
-/* Reduced motion: skip all transforms/fades */
+/* ─── Skeleton shimmer ───────────────────────────────────────────── */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-elevated) 0%,
+    rgba(255,255,255,0.04) 50%,
+    var(--color-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ─── Pipeline node states ───────────────────────────────────────── */
+.pipeline-node-active {
+  box-shadow: 0 0 0 3px rgba(110,156,203,0.12);
+}
+.pipeline-node-pass {
+  box-shadow: 0 0 0 3px rgba(111,175,134,0.12);
+}
+.pipeline-node-evidence {
+  box-shadow: 0 0 0 3px rgba(208,162,83,0.12);
+}
+
+/* ─── Evidence left-border accent ───────────────────────────────── */
+.evidence-border-confirmed   { border-left: 2px solid var(--color-pass); }
+.evidence-border-strong      { border-left: 2px solid var(--color-evidence); }
+.evidence-border-partial     { border-left: 2px solid color-mix(in oklch, var(--color-evidence) 70%, transparent); }
+.evidence-border-neutral     { border-left: 2px solid var(--color-border); }
+
+/* ─── Reduced motion ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-slide-up,
@@ -87,25 +126,46 @@
   .stagger-children > *,
   .reveal,
   .reveal.revealed,
-  .animate-pulse-node {
+  .animate-pulse-node,
+  .skeleton-shimmer {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
+    background: var(--color-elevated) !important;
   }
 }
 
 /* ─── Login page extras ───────────────────────────────────────────── */
 @keyframes pulse-node {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.15); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.12); }
 }
 
 .animate-pulse-node {
-  animation: pulse-node 2.4s ease-in-out infinite;
+  animation: pulse-node 2.6s ease-in-out infinite;
 }
 
-/* Subtle spinning ring (used in loading states) */
+/* Connector line pulse */
+@keyframes connector-pulse {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 0.60; }
+}
+.animate-connector {
+  animation: connector-pulse 2.4s ease-in-out infinite;
+}
+
+/* Subtle spinning ring */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── Terminal output ─────────────────────────────────────────────── */
+.terminal-fail-line {
+  color: var(--color-fail);
+  opacity: 0.9;
+}
+.terminal-pass-line {
+  color: var(--color-pass);
+  opacity: 0.9;
 }

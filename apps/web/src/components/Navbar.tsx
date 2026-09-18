@@ -31,29 +31,32 @@ export default function Navbar() {
   const isInvestigations = pathname === '/' || pathname.startsWith('/investigations');
 
   return (
-    <nav className="flex items-center justify-between px-5 py-3 border-b border-border bg-surface/95 backdrop-blur-sm shrink-0 sticky top-0 z-10">
-      <div className="flex items-center gap-7">
+    <nav className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-surface/95 backdrop-blur-sm shrink-0 sticky top-0 z-10">
+      <div className="flex items-center gap-8">
         {/* Wordmark */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-experiment transition-transform duration-150 group-hover:scale-110">
+        <Link href="/" className="flex items-center gap-2 group cursor-pointer">
+          <span className="text-experiment transition-all duration-200 group-hover:opacity-80 group-hover:scale-105">
             <LogoMark size={18} />
           </span>
-          <span className="font-bold text-sm tracking-wide text-primary">ColdProof</span>
+          <span className="font-bold text-sm tracking-wide text-primary group-hover:text-primary/90 transition-colors duration-150">ColdProof</span>
         </Link>
 
         {user && (
           <Link
             href="/"
-            className={`text-xs font-medium uppercase tracking-widest transition-colors ${
+            className={`relative text-xs font-semibold uppercase tracking-[0.12em] transition-colors duration-150 pb-0.5 ${
               isInvestigations
                 ? 'text-primary'
-                : 'text-secondary hover:text-primary'
+                : 'text-secondary/70 hover:text-primary'
             }`}
           >
-            {isInvestigations && (
-              <span className="inline-block border-b border-experiment/60 pb-px">Investigations</span>
-            )}
-            {!isInvestigations && 'Investigations'}
+            Investigations
+            {/* Active accent underline */}
+            <span
+              className={`absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-experiment transition-all duration-200 ${
+                isInvestigations ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
           </Link>
         )}
       </div>
@@ -61,12 +64,12 @@ export default function Navbar() {
       <div className="flex items-center gap-4">
         {user ? (
           <>
-            <span className="text-secondary text-xs hidden sm:block truncate max-w-[180px] font-mono opacity-60">
+            <span className="text-secondary text-xs hidden sm:block truncate max-w-[200px] font-mono opacity-50 select-none">
               {user.email}
             </span>
             <button
               onClick={handleLogout}
-              className="text-xs text-secondary hover:text-primary transition-colors font-medium px-2.5 py-1 rounded-md hover:bg-elevated"
+              className="text-xs text-secondary/70 hover:text-primary transition-all duration-150 font-medium px-2.5 py-1.5 rounded-md hover:bg-elevated border border-transparent hover:border-border/50"
             >
               Sign out
             </button>
@@ -74,7 +77,7 @@ export default function Navbar() {
         ) : (
           <Link
             href="/login"
-            className="text-xs font-medium text-secondary hover:text-primary transition-colors"
+            className="text-xs font-medium text-secondary hover:text-primary transition-colors duration-150"
           >
             Sign in
           </Link>
