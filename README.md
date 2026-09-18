@@ -102,7 +102,7 @@ coldproof --help
 
 The CLI performs the investigation locally, while the ColdProof web application stores and visualizes the resulting evidence.
 
-> **Current CLI version:** `0.1.4`
+> **Current CLI version:** `0.1.6`
 
 ### Available Commands
 
