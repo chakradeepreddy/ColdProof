@@ -158,8 +158,11 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 opacity-[0.035]"
           style={{
-            backgroundImage: `radial-gradient(circle, var(--color-border) 1px, transparent 1px)`,
-            backgroundSize: '32px 32px',
+            backgroundImage: `
+              radial-gradient(circle, var(--color-border) 1px, transparent 1px),
+              radial-gradient(circle, var(--color-border) 1px, transparent 1px)
+            `,
+            backgroundSize: '4px 32px, 32px 4px',
           }}
         />
         {/* Subtle radial fade over grid */}
