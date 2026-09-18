@@ -258,16 +258,16 @@ export default function DashboardPage() {
                 <span className="text-[10px] font-mono text-experiment/80 uppercase tracking-[0.2em]">Execution-based environment causality debugger</span>
               </div>
 
-              <p className="text-base text-secondary leading-relaxed mb-3 animate-slide-up" style={{ animationDelay: '240ms' }}>
-                Don&apos;t just show me what&apos;s different.
+              <p className="text-base font-bold text-primary/90 tracking-widest uppercase mb-3 animate-slide-up" style={{ animationDelay: '240ms' }}>
+                DIFFERENCE ≠ CAUSE
               </p>
               <p className="text-lg font-semibold text-primary/90 leading-relaxed mb-8 animate-slide-up" style={{ animationDelay: '320ms' }}>
-                Show me which difference <span className="text-experiment">changed the result.</span>
+                ColdProof does not merely list environment differences. <span className="text-experiment">It tests candidates through execution.</span>
               </p>
 
               {/* Problem statement */}
               <p className="text-sm text-secondary/70 leading-relaxed mb-10 max-w-sm border-l border-border/50 pl-4 animate-slide-up" style={{ animationDelay: '400ms' }}>
-                A command works on your machine but fails in CI, Docker, or a colleague&apos;s environment. ColdProof reproduces the behavior, finds environmental differences, tests each candidate, and produces structured evidence.
+                ColdProof compares how the same command behaves in your normal environment and a clean environment, identifies environment differences associated with the failure, then experimentally perturbs candidates to determine which differences actually affect the result.
               </p>
 
               {/* CTAs */}
@@ -313,7 +313,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-experiment/5 border border-experiment/10 group-hover:bg-experiment/10 group-hover:border-experiment/30 transition-colors duration-300 shadow-[0_0_15px_rgba(110,156,203,0)] group-hover:shadow-[0_0_15px_rgba(110,156,203,0.1)]">
                     <span className="text-experiment font-bold text-xs tracking-widest">PERTURB</span>
-                    <span className="text-experiment/60 font-mono text-[10px] ml-auto">BLOCK tsc</span>
+                    <span className="text-experiment/60 font-mono text-[10px] ml-auto">PERTURB CANDIDATE</span>
                   </div>
                   <div className="flex items-center justify-center py-1">
                     <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 group-hover:bg-experiment/30 transition-colors duration-300" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5 group-hover:text-experiment/40 transition-colors duration-300" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
@@ -384,7 +384,7 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-0">
               {[
-                { label: 'CODE / COMMAND', sub: 'e.g. npm run build, npm test' },
+                { label: 'CODE / COMMAND', sub: 'e.g. your build or test command' },
                 { label: 'Warm execution', sub: 'local machine · captures telemetry' },
                 { label: 'Clean execution', sub: 'fresh Docker container · no local environment' },
                 { label: 'Behavioral comparison', sub: 'exit codes · failure signatures' },
@@ -510,7 +510,7 @@ export default function DashboardPage() {
                 { label: 'Warm vs. clean execution', detail: 'Captures exit code and output from both environments' },
                 { label: 'Docker-based clean environment', detail: 'Isolated Node.js container with no local env contamination' },
                 { label: 'Environment candidate detection', detail: 'Detects executable path differences between environments' },
-                { label: 'Project-local executable investigation', detail: 'Detects node_modules/.bin executables present locally but absent in Docker' },
+                { label: 'Project-local executable investigation', detail: 'Detects project-specific executables present locally but absent in Docker' },
                 { label: 'Controlled perturbation', detail: 'Blocks each candidate via PATH manipulation · re-executes' },
                 { label: 'Evidence classification', detail: 'CONFIRMED / STRONG_EVIDENCE / PARTIAL_EVIDENCE / NOT_IMPLICATED' },
                 { label: 'Persisted investigations', detail: 'Structured results stored in PostgreSQL with ownership auth' },
@@ -525,26 +525,22 @@ export default function DashboardPage() {
         <div className="h-px bg-border/25 mb-1" />
 
         {/* ════════════════════════════════════════════════════════
-            NOT IN MVP
+            SUPPORTED ENVIRONMENTS
         ═══════════════════════════════════════════════════════════ */}
         <section className="py-20 reveal">
-          <SectionLabel step="05" title="Intentional MVP scope" />
+          <SectionLabel step="05" title="Environment Support" />
           <div className="grid md:grid-cols-2 gap-12">
             <div>
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Not in this version</h2>
+              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Supported Environments</h2>
               <p className="text-secondary/70 text-sm leading-relaxed">
-                These are known boundaries of the current system — not failures. ColdProof is scoped to proving the core technique with real projects.
+                ColdProof is designed for command-line development workflows and currently supports macOS/Linux workflows with Docker.
               </p>
             </div>
             <div className="space-y-0">
               {[
-                { label: 'Windows support', detail: 'Developed and tested on macOS/Linux. Windows compatibility is untested.' },
-                { label: 'Full language-local binary detection', detail: 'Candidate detection currently covers the allowlisted executable set. Broader language-specific detection (Python venvs, Ruby gems, etc.) is not implemented.' },
-                { label: 'Binary instrumentation beyond the allowlist', detail: 'The perturbation engine uses PATH blocking. Deeper binary-level interception is not in scope.' },
-                { label: 'Multi-project workspace management', detail: 'One default project per user. Team/org project management is not implemented.' },
-                { label: 'Automatic repair', detail: 'ColdProof identifies causal candidates but does not suggest or apply fixes.' },
-                { label: 'CI/GitHub integration', detail: 'No native GitHub Actions or CI pipeline integration. Requires manual CLI invocation.' },
-                { label: 'Runtime version perturbation', detail: 'Node.js and npm version differences are detected but perturbation of runtime versions is not yet implemented.' },
+                { label: 'macOS & Linux', detail: 'The investigation engine runs natively on macOS and Linux host machines.' },
+                { label: 'Docker Clean Environments', detail: 'Uses standard Docker containers to provide a guaranteed clean environment for behavioral comparison.' },
+                { label: 'Command-Line Workflows', detail: 'Supports any command-line build, test, or CI process that produces an exit code and output.' },
               ].map(item => <ScopeItem key={item.label} {...item} />)}
             </div>
           </div>

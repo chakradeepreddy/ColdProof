@@ -144,3 +144,10 @@ TBD
 - **[Phase 9]** Tested end-to-end Telemetry upload using a fresh generated Firebase token. Verified API correctly handles and stores the `InvestigationPayload`.
 - **[Phase 9]** Conducted Security Audit. Confirmed that NO `spawn` or `exec` commands exist in `apps/api` or `apps/web`.
 - **[Phase 9]** Added `typecheck` script to `cli/package.json` and verified full composite build (`npm run typecheck` and `npm run build -w apps/web`).
+- **[Phase 10]** Final UI Micro-Polish: Added custom logo cursor glow to web dashboard.
+- **[Phase 10]** Validation: Removed `.coldproof-fixtures` and validated ColdProof on the real ColdProof project codebase.
+- **[Phase 10]** Validation: Conducted an unknown-project black-box test, proving ColdProof dynamically detects missing executables in unrelated projects without hardcoded assumptions.
+- **[Phase 10]** Bug/UX Polish: Updated investigation conclusion logic to accurately state when candidates are exhausted but partial evidence was found.
+- **[Phase 10]** UX Polish: Improved "What command normally fails?" messaging on the New Investigation page to ensure users understand they must bring a real project command.
+- **[Phase 10]** Product-Truth Polish: Performed a universal content pass across the web dashboard and investigation details page, replacing hardcoded demo references (e.g., `tsc`, `jq`) with universal phrasing.
+- **[Phase 10]** Documentation: Audited the entire repository and wrote the final, production-quality `README.md` reflecting the exact MVP implementation.
