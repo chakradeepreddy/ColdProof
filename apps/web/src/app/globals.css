@@ -31,12 +31,11 @@
     background-color: var(--color-background);
     color: var(--color-primary);
     font-family: var(--font-sans);
-    /* Fine grid — barely visible at resting, creates depth */
+    /* Dot-matrix — precision instrument / PCB feel */
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(110, 156, 203, 0.04) 0%, transparent 60%),
-      linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
-    background-size: 100% 100%, 32px 32px, 32px 32px;
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(110, 156, 203, 0.05) 0%, transparent 60%),
+      radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px);
+    background-size: 100% 100%, 28px 28px;
   }
 }
 

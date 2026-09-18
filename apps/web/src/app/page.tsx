@@ -6,8 +6,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // ─── Scroll reveal ────────────────────────────────────────────────────────────
-function useScrollReveal() {
+// `ready` must be true for the observer to set up — ensures we only observe
+// after auth resolves and the .reveal elements are actually in the DOM.
+function useScrollReveal(ready: boolean) {
   useEffect(() => {
+    if (!ready) return;
     const els = document.querySelectorAll('.reveal');
     if (!els.length) return;
     const obs = new IntersectionObserver(
@@ -16,7 +19,7 @@ function useScrollReveal() {
     );
     els.forEach(el => obs.observe(el));
     return () => obs.disconnect();
-  }, []);
+  }, [ready]);
 }
 
 // ─── Logo mark ────────────────────────────────────────────────────────────────
@@ -159,11 +162,32 @@ function ScopeItem({ label, detail }: { label: string; detail: string }) {
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  useScrollReveal();
+
+  // Only set up the IntersectionObserver once auth has resolved and the
+  // .reveal elements are actually mounted. Passing `ready` as a dep means
+  // the effect re-runs after the auth guard lifts.
+  const ready = !loading && !!user;
+  useScrollReveal(ready);
 
   useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
-  if (loading || !user) return null;
+  // Show a minimal skeleton while Firebase auth initialises so the page
+  // is never a blank white/dark void. The skeleton matches the navbar height
+  // and gives the impression of a loading state rather than a crash.
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh] animate-fade-in">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-experiment/30 border-t-experiment rounded-full animate-spin" />
+          <span className="text-secondary/40 text-xs font-mono uppercase tracking-widest">Loading…</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Unauthenticated — redirect fires via useEffect above; render nothing while
+  // it runs so there is no flash of dashboard content for logged-out users.
+  if (!user) return null;
 
   return (
     <div className="w-full">
