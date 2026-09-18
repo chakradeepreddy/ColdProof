@@ -18,6 +18,23 @@ function LogoMark({ size = 18 }: { size?: number }) {
   );
 }
 
+function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`relative text-xs font-semibold uppercase tracking-[0.12em] transition-colors duration-150 pb-0.5 ${
+        active ? 'text-primary' : 'text-secondary/60 hover:text-primary'
+      }`}
+    >
+      {label}
+      {/* Active accent underline */}
+      <span className={`absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-experiment transition-all duration-200 ${
+        active ? 'opacity-100' : 'opacity-0'
+      }`} />
+    </Link>
+  );
+}
+
 export default function Navbar() {
   const { user } = useAuth();
   const router = useRouter();
@@ -28,7 +45,9 @@ export default function Navbar() {
     router.push('/login');
   };
 
-  const isInvestigations = pathname === '/' || pathname.startsWith('/investigations');
+  // Active state logic
+  const isDashboard = pathname === '/';
+  const isInvestigations = pathname.startsWith('/investigations');
 
   return (
     <nav className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-surface/95 backdrop-blur-sm shrink-0 sticky top-0 z-10">
@@ -38,26 +57,17 @@ export default function Navbar() {
           <span className="text-experiment transition-all duration-200 group-hover:opacity-80 group-hover:scale-105">
             <LogoMark size={18} />
           </span>
-          <span className="font-bold text-sm tracking-wide text-primary group-hover:text-primary/90 transition-colors duration-150">ColdProof</span>
+          <span className="font-bold text-sm tracking-wide text-primary group-hover:text-primary/90 transition-colors duration-150">
+            ColdProof
+          </span>
         </Link>
 
+        {/* Nav links — only when authenticated */}
         {user && (
-          <Link
-            href="/"
-            className={`relative text-xs font-semibold uppercase tracking-[0.12em] transition-colors duration-150 pb-0.5 ${
-              isInvestigations
-                ? 'text-primary'
-                : 'text-secondary/70 hover:text-primary'
-            }`}
-          >
-            Investigations
-            {/* Active accent underline */}
-            <span
-              className={`absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-experiment transition-all duration-200 ${
-                isInvestigations ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          </Link>
+          <div className="flex items-center gap-6">
+            <NavLink href="/" label="Dashboard" active={isDashboard} />
+            <NavLink href="/investigations" label="Investigations" active={isInvestigations} />
+          </div>
         )}
       </div>
 
