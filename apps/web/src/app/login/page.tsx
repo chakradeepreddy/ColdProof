@@ -34,7 +34,7 @@ function LogoMark({ size = 24, className = '' }: { size?: number; className?: st
 }
 
 // ─── Experiment flow visual ────────────────────────────────────────
-function ExperimentFlow() {
+function ExperimentFlow({ bootStage }: { bootStage: number }) {
   const steps = [
     { label: 'WARM', sub: 'PASS', color: 'text-pass', bg: 'bg-pass/10 border-pass/25' },
     { label: 'CLEAN', sub: 'FAIL', color: 'text-fail', bg: 'bg-fail/10 border-fail/25' },
@@ -46,15 +46,21 @@ function ExperimentFlow() {
     <div className="relative flex flex-col items-center gap-0 select-none pointer-events-none">
       {/* Subtle radial glow behind flow */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
         style={{
-          background: 'radial-gradient(ellipse 120px 200px at 50% 50%, rgba(110,156,203,0.06) 0%, transparent 70%)',
+          opacity: bootStage >= 3 ? 1 : 0,
+          background: 'radial-gradient(ellipse 120px 200px at 50% 50%, rgba(110,156,203,0.08) 0%, transparent 70%)',
         }}
       />
       {steps.map((step, i) => (
         <React.Fragment key={step.label}>
           <div
-            className={`flex flex-col items-center px-4 py-2.5 rounded-lg border ${step.bg} w-28 transition-all duration-200 hover:scale-[1.02]`}
+            className={`flex flex-col items-center px-4 py-2.5 rounded-lg border ${step.bg} w-28 transition-all duration-500`}
+            style={{
+              opacity: bootStage >= 3 ? 1 : 0,
+              transform: bootStage >= 3 ? 'translateY(0)' : 'translateY(8px)',
+              transitionDelay: `${i * 150}ms`
+            }}
           >
             <span className={`text-xs font-bold uppercase tracking-widest ${step.color}`}>
               {step.label}
@@ -64,7 +70,13 @@ function ExperimentFlow() {
             </span>
           </div>
           {i < steps.length - 1 && (
-            <div className="flex flex-col items-center my-0.5">
+            <div 
+              className="flex flex-col items-center my-0.5 transition-opacity duration-500"
+              style={{
+                opacity: bootStage >= 3 ? 1 : 0,
+                transitionDelay: `${(i * 150) + 75}ms`
+              }}
+            >
               <div className="w-px h-3 bg-border/40 animate-connector" />
               <svg className="w-2.5 h-2.5 text-secondary/25 -mt-0.5 animate-connector" fill="currentColor" viewBox="0 0 10 10">
                 <path d="M5 8L1 3h8L5 8z" />
@@ -84,10 +96,20 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  
+  // 0: Loading, 1: Backgrounds, 2: Left Panel, 3: Flow Visual, 4: Right Form Ready
+  const [bootStage, setBootStage] = useState(0);
+  
   const router = useRouter();
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { 
+    const t1 = setTimeout(() => setBootStage(1), 100);
+    const t2 = setTimeout(() => setBootStage(2), 600);
+    const t3 = setTimeout(() => setBootStage(3), 1300);
+    const t4 = setTimeout(() => setBootStage(4), 2100);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+  }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +139,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex-grow flex items-stretch min-h-0 overflow-hidden bg-background">
+    <div className="flex-grow flex items-stretch min-h-0 overflow-hidden bg-background relative">
+      
+      {/* System Initializing Status (Hidden after boot) */}
+      <div 
+        className="absolute top-8 right-8 z-50 flex items-center gap-2 transition-opacity duration-700"
+        style={{ opacity: bootStage > 0 && bootStage < 4 ? 1 : 0, pointerEvents: 'none' }}
+      >
+        <span className="w-1.5 h-1.5 bg-experiment rounded-full animate-pulse-node" />
+        <span className="text-[10px] font-mono text-experiment/80 uppercase tracking-[0.25em]">
+          System Initializing
+        </span>
+      </div>
+
       {/* ── Left panel: branding + product visual ── */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 border-r border-border px-12 py-14 relative overflow-hidden">
         {/* Subtle grid background */}
@@ -138,12 +172,12 @@ export default function LoginPage() {
         <div
           className="relative flex items-center gap-2.5"
           style={{
-            opacity: mounted ? 1 : 0,
-            transform: mounted ? 'none' : 'translateY(-6px)',
-            transition: 'opacity 300ms ease, transform 300ms ease',
+            opacity: bootStage >= 2 ? 1 : 0,
+            transform: bootStage >= 2 ? 'none' : 'translateY(-6px)',
+            transition: 'opacity 500ms ease, transform 500ms ease',
           }}
         >
-          <LogoMark size={22} className="text-experiment" />
+          <LogoMark size={22} className="text-experiment animate-hero-logo" />
           <span className="font-bold text-base tracking-wide text-primary">ColdProof</span>
         </div>
 
@@ -151,9 +185,9 @@ export default function LoginPage() {
         <div className="relative space-y-5">
           <div
             style={{
-              opacity: mounted ? 1 : 0,
-              transform: mounted ? 'none' : 'translateY(12px)',
-              transition: 'opacity 400ms 100ms ease, transform 400ms 100ms ease',
+              opacity: bootStage >= 2 ? 1 : 0,
+              transform: bootStage >= 2 ? 'none' : 'translateY(12px)',
+              transition: 'opacity 500ms 150ms ease, transform 500ms 150ms ease',
             }}
           >
             <p className="text-xs font-mono text-secondary/60 uppercase tracking-[0.2em] mb-3">
@@ -166,9 +200,9 @@ export default function LoginPage() {
 
           <div
             style={{
-              opacity: mounted ? 1 : 0,
-              transform: mounted ? 'none' : 'translateY(10px)',
-              transition: 'opacity 400ms 220ms ease, transform 400ms 220ms ease',
+              opacity: bootStage >= 2 ? 1 : 0,
+              transform: bootStage >= 2 ? 'none' : 'translateY(10px)',
+              transition: 'opacity 500ms 300ms ease, transform 500ms 300ms ease',
             }}
           >
             <p className="text-sm text-secondary leading-relaxed">
@@ -178,14 +212,8 @@ export default function LoginPage() {
           </div>
 
           {/* Product experiment visual */}
-          <div
-            className="pt-4"
-            style={{
-              opacity: mounted ? 1 : 0,
-              transition: 'opacity 500ms 380ms ease',
-            }}
-          >
-            <ExperimentFlow />
+          <div className="pt-4">
+            <ExperimentFlow bootStage={bootStage} />
           </div>
         </div>
 
@@ -193,8 +221,8 @@ export default function LoginPage() {
         <div
           className="relative"
           style={{
-            opacity: mounted ? 1 : 0,
-            transition: 'opacity 400ms 500ms ease',
+            opacity: bootStage >= 2 ? 1 : 0,
+            transition: 'opacity 500ms 600ms ease',
           }}
         >
           <p className="text-xs text-secondary/40 font-mono">
@@ -204,13 +232,20 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right panel: sign-in card ── */}
-      <div className="flex-grow flex items-center justify-center p-6">
+      <div className="flex-grow flex items-center justify-center p-6 relative">
+        
+        {/* Right Panel Radial Glow */}
+        <div 
+          className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_50%,rgba(110,156,203,0.035)_0%,transparent_60%)] transition-opacity duration-1000"
+          style={{ opacity: bootStage >= 1 ? 1 : 0 }}
+        />
+
         <div
-          className="w-full max-w-sm"
+          className="w-full max-w-sm relative z-10"
           style={{
-            opacity: mounted ? 1 : 0,
-            transform: mounted ? 'none' : 'translateY(14px)',
-            transition: 'opacity 400ms 120ms ease, transform 400ms 120ms ease',
+            opacity: bootStage >= 4 ? 1 : 0,
+            transform: bootStage >= 4 ? 'none' : 'translateY(16px) scale(0.98)',
+            transition: 'opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 600ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           {/* Mobile wordmark — only visible when left panel is hidden */}
@@ -220,7 +255,7 @@ export default function LoginPage() {
           </div>
 
           {/* Card */}
-          <div className="bg-surface border border-border rounded-2xl p-8 shadow-2xl shadow-black/40">
+          <div className="bg-surface border border-border rounded-2xl p-8 shadow-2xl shadow-black/40 hover-card-elevate">
             {/* Card header */}
             <div className="mb-7">
               {/* Show logo on desktop inside card too, since left panel has the branding */}
@@ -274,13 +309,13 @@ export default function LoginPage() {
                 Sign in with email
               </button>
             ) : (
-              <form onSubmit={handleEmailLogin} className="space-y-3">
+              <form onSubmit={handleEmailLogin} className="space-y-3 animate-fade-in">
                 <div>
                   <label className="block text-xs font-medium text-secondary mb-1.5">Email</label>
                   <input
                     type="email"
                     autoFocus
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:border-experiment/50 focus:shadow-[0_0_0_2px_rgba(110,156,203,0.08)] transition-all duration-150 placeholder:text-secondary/40"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:ring-2 focus:ring-experiment/30 focus:border-experiment/60 transition-all duration-200 placeholder:text-secondary/40 shadow-inner"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
@@ -291,7 +326,7 @@ export default function LoginPage() {
                   <label className="block text-xs font-medium text-secondary mb-1.5">Password</label>
                   <input
                     type="password"
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:border-experiment/50 focus:shadow-[0_0_0_2px_rgba(110,156,203,0.08)] transition-all duration-150 placeholder:text-secondary/40"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-primary text-sm focus:outline-none focus:ring-2 focus:ring-experiment/30 focus:border-experiment/60 transition-all duration-200 placeholder:text-secondary/40 shadow-inner"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
@@ -301,7 +336,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-experiment hover:bg-experiment/90 active:bg-experiment/80 text-[#0B0D0F] font-semibold text-sm py-2.5 rounded-xl transition-all duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-experiment hover:bg-experiment/90 active:bg-experiment/80 text-[#0B0D0F] font-semibold text-sm py-2.5 rounded-xl transition-all duration-150 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
                 >
                   {loading && <span className="w-3.5 h-3.5 border-2 border-[#0B0D0F]/30 border-t-[#0B0D0F] rounded-full animate-spin" />}
                   Sign in
