@@ -339,25 +339,32 @@ Guidance:
           perturbationResult: finalPerturbationResult
         };
 
-        const apiUrl = process.env.COLDPROOF_API_URL || 'http://localhost:3001';
+        const apiUrl = process.env.COLDPROOF_API_URL || 'http://127.0.0.1:3001';
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch(`${apiUrl}/api/investigations`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         if (res.ok) {
           const data = await res.json() as any;
           spinner.succeed(`Investigation uploaded successfully: ${data.id}`);
         } else {
           const err = await res.text();
-          spinner.fail(`Failed to upload investigation: ${err}`);
+          spinner.fail(`Evidence upload failed. Your local investigation completed successfully, but the result could not be saved. (Error: ${res.status} ${res.statusText})`);
         }
       } catch (e: any) {
-        spinner.fail(`Failed to upload investigation: ${e.message}`);
+        spinner.fail(`Evidence upload failed. Your local investigation completed successfully, but the result could not be saved. (${e.message})`);
       }
     }
   });

@@ -78,7 +78,7 @@ export async function detectCandidates(command: string, projectPath: string, cle
       try {
         const cmd = process.platform === 'win32' ? `where ${bin}` : `which ${bin}`;
         const output = (await execAsync(cmd)).stdout.trim();
-        realPath = output.split('\n')[0].trim();
+        realPath = output.split(/\r?\n/)[0].trim();
       } catch {
         continue; // If it's not even on the host, no need to shim it
       }
@@ -87,7 +87,7 @@ export async function detectCandidates(command: string, projectPath: string, cle
 
       if (process.platform === 'win32') {
         const shimPath = path.join(tmpDir, `${bin}.cmd`);
-        const shimScript = `@echo off\r\necho ${bin} >> "${logFile}"\r\n"${realPath}" %*\r\n`;
+        const shimScript = `@echo off\r\necho ${bin}>> "${logFile}"\r\n"${realPath}" %*\r\n`;
         fs.writeFileSync(shimPath, shimScript);
       } else {
         const shimPath = path.join(tmpDir, bin);
@@ -109,7 +109,7 @@ export async function detectCandidates(command: string, projectPath: string, cle
     let invokedBinaries: string[] = [];
     if (fs.existsSync(logFile)) {
       const logContents = fs.readFileSync(logFile, 'utf-8');
-      invokedBinaries = [...new Set(logContents.split('\n').filter(Boolean))];
+      invokedBinaries = [...new Set(logContents.split(/\r?\n/).map(s => s.trim()).filter(Boolean))];
     }
 
     for (const bin of invokedBinaries) {
