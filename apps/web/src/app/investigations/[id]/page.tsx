@@ -202,11 +202,11 @@ function EvidenceCard({ evidence, candidateName }: { evidence: any; candidateNam
     `Evidence was inconclusive for ${name}.`;
 
   const description =
-    cls === 'CONFIRMED'        ? `Blocking ${name} in the warm environment reproduced the exact clean failure. Exit code and failure signatures matched. This is causal proof.` :
-    cls === 'STRONG_EVIDENCE'  ? `Blocking ${name} caused a failure with the same exit code boundary as the clean environment failure. Strong experimental evidence.` :
-    cls === 'PARTIAL_EVIDENCE' ? `Restoring ${name} allowed execution to progress further, but another failure occurred. ${name} is a partial contributor — not the complete cause.` :
-    cls === 'NOT_IMPLICATED'   ? `Blocking ${name} did not reproduce the clean failure signature. The evidence does not support ${name} as the cause.` :
-    `ColdProof was unable to perform a conclusive perturbation experiment for this candidate.`;
+    cls === 'CONFIRMED'        ? `A candidate was experimentally shown to reproduce the relevant behavior.` :
+    cls === 'STRONG_EVIDENCE'  ? `The candidate's perturbation reproduces the observed failure boundary, but the exact root cause may require additional context.` :
+    cls === 'PARTIAL_EVIDENCE' ? `Changing the candidate removes or changes the original failure, but another failure remains.` :
+    cls === 'NOT_IMPLICATED'   ? `Testing the candidate does not reproduce the relevant behavior.` :
+    `ColdProof did not identify an environment candidate that explains the observed difference.`;
 
   return (
     <div className={cn(
@@ -245,7 +245,7 @@ function EvidenceCard({ evidence, candidateName }: { evidence: any; candidateNam
         <div className="bg-[#08090A] rounded-lg p-3.5 border border-border/40">
           <p className="text-[10px] font-bold text-secondary/50 uppercase tracking-[0.16em] font-mono mb-1.5 flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            What does this mean?
+            What Does the Evidence Mean?
           </p>
           <p className="text-sm text-primary/70 leading-relaxed">{description}</p>
         </div>
@@ -642,7 +642,7 @@ export default function InvestigationDetailPage() {
         {/* ── Step 01: Reproduce ──────────────────────────────────── */}
         <Section
           step="01"
-          title="Reproduce"
+          title="What Happened?"
           accentColor={behaviorChanged ? 'fail' : 'pass'}
           badge={
             behaviorChanged ? (
@@ -685,7 +685,7 @@ export default function InvestigationDetailPage() {
         {behaviorChanged && (
           <Section
             step="02"
-            title="Candidate Detection"
+            title="What Was Different?"
             accentColor="experiment"
             badge={
               <span className="text-xs font-semibold text-secondary bg-elevated border border-border/50 px-2.5 py-1 rounded-full">
@@ -709,7 +709,7 @@ export default function InvestigationDetailPage() {
 
         {/* ── Step 03: Perturbation ────────────────────────────────── */}
         {behaviorChanged && (
-          <Section step="03" title="Perturbation & Causal Proof" accentColor="evidence">
+          <Section step="03" title="What Did ColdProof Test?" accentColor="evidence">
             <div className="p-5 md:p-6">
               {testedCandidates.length === 0 ? (
                 <div className="text-center py-8">
@@ -775,7 +775,7 @@ export default function InvestigationDetailPage() {
                           {/* Failure signature */}
                           <div>
                             <p className="text-[10px] font-bold text-secondary/50 uppercase tracking-[0.16em] mb-3 font-mono">
-                              What Differed? (Signature Match)
+                              What Changed After the Test?
                             </p>
                             <ul className="mb-4">
                               <CheckRow ok={!!pert.evidence?.candidateObserved} label="Candidate Observed" detail="Candidate was accessed during warm execution." />
@@ -786,7 +786,7 @@ export default function InvestigationDetailPage() {
                             </ul>
                             
                             <p className="text-[10px] font-bold text-secondary/50 uppercase tracking-[0.16em] mb-3 font-mono mt-8">
-                              Result
+                              Evidence Result
                             </p>
                             <EvidenceCard evidence={pert.evidence} candidateName={candidateName} />
                           </div>
@@ -823,9 +823,9 @@ export default function InvestigationDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <p className="text-sm text-secondary/50 max-w-xs leading-relaxed">
-                  Generate a plain-English explanation of the evidence above.
-                  <span className="block text-secondary/35 text-xs mt-1 font-mono">Powered by Groq · based on recorded data only</span>
+                <p className="text-sm text-secondary/50 max-w-sm leading-relaxed">
+                  The deterministic investigation engine is the source of truth. AI only translates recorded investigation evidence into an easier-to-understand explanation.
+                  <span className="block text-secondary/35 text-xs mt-2 font-mono">Powered by Groq · based on recorded data only</span>
                 </p>
                 <button
                   onClick={handleExplain}
