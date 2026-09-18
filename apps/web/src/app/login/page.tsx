@@ -163,8 +163,8 @@ export default function LoginPage() {
               radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px),
               radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px)
             `,
-            backgroundSize: '90px 156px, 30px 52px, 30px 52px',
-            backgroundPosition: '45px 78px, 0 0, 15px 26px',
+            backgroundSize: '144px 252px, 48px 84px, 48px 84px',
+            backgroundPosition: '72px 126px, 0 0, 24px 42px',
           }}
         />
         {/* Subtle radial fade over grid */}

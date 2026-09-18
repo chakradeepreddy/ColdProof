@@ -47,8 +47,8 @@
       /* Layer 1 & 0: Staggered tiny hex dot field (blue-gray) */
       radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px),
       radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px);
-    background-size: 100% 100%, 100% 100%, 90px 156px, 30px 52px, 30px 52px;
-    background-position: center, center, 45px 78px, 0 0, 15px 26px;
+    background-size: 100% 100%, 100% 100%, 144px 252px, 48px 84px, 48px 84px;
+    background-position: center, center, 72px 126px, 0 0, 24px 42px;
     background-attachment: fixed;
   }
 }
