@@ -82,6 +82,51 @@ A deep-dive view into a specific investigation. It shows:
 - **Evidence Result** (The final deterministic classification)
 - **AI Explanation** (An optional, plain-English translation of the deterministic result)
 
+## Public Demo Investigations
+
+ColdProof includes a public, read-only investigation gallery so reviewers can inspect real investigation evidence without creating an account.
+
+The demo gallery exposes a small, explicitly allowlisted set of real investigations from ColdProof's database. It is designed for evaluation and demonstration of the complete:
+
+REPRODUCE → PERTURB → PROVE
+
+workflow.
+
+### What reviewers can inspect
+
+Each public investigation can show:
+
+- The command investigated
+- Project name
+- Warm vs clean execution results
+- Detected environment differences
+- Candidates ColdProof identified
+- Controlled perturbation experiments
+- Evidence classification
+- Perturbed execution output
+- Stored AI explanation, when available
+- Investigation timestamp
+
+The public demo is strictly read-only. It does not expose account information, Firebase identity, authentication tokens, secrets, or private investigation metadata.
+
+### Security model
+
+Public access is restricted to a server-side allowlist of specific investigation IDs.
+
+The normal authenticated investigation endpoints remain protected by authentication and ownership checks.
+
+Public demo routes:
+- Allow only explicitly approved investigation IDs
+- Return 404 for non-allowlisted IDs
+- Support read-only GET access only
+- Do not allow deletion or modification
+- Do not generate or modify AI explanations
+- Redact private user/account fields
+
+The public gallery is intended only for demonstration and evaluation; normal user investigations remain private.
+
+[Explore Demo Investigations](https://cold-proof-web-two.vercel.app/demo/investigations)
+
 ## The ColdProof CLI
 
 The ColdProof CLI executes the experiments locally on the developer's machine.
