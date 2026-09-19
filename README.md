@@ -105,16 +105,18 @@ coldproof --help
 Installed successfully, but your terminal says `coldproof: command not found`?
 Your npm global executable directory may not be included in your PATH.
 
-**STEP 1 — Find npm's global directory**
+#### macOS / Linux
+
+**Step 1 — Find npm's global directory**
 
 ```bash
 npm prefix -g
 ```
 *(This shows where npm installs global packages.)*
 
-**STEP 2 — Add npm's global bin directory to PATH**
+**Step 2 — Add npm's global executable directory to your PATH**
 
-For macOS using zsh:
+For zsh:
 ```bash
 echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
@@ -122,7 +124,7 @@ rehash
 ```
 *(This adds npm's global executable directory to your PATH.)*
 
-**STEP 3 — Verify ColdProof**
+**Step 3 — Verify**
 
 ```bash
 coldproof --version
@@ -131,10 +133,43 @@ Expected: `0.1.6`
 
 *Using Bash instead of zsh?*
 ```bash
-echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.bash_profile
-source ~/.bash_profile
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 coldproof --version
 ```
+
+#### Windows
+
+If installation succeeds but Windows says 'coldproof' is not recognized, npm's global executable directory may not be in your PATH.
+
+**Step 1**
+Open Command Prompt or PowerShell and run:
+```bash
+npm prefix -g
+```
+*(This shows npm's global installation directory.)*
+
+**Step 2 — Add the npm global directory to your User PATH.**
+
+1. Copy the directory returned by `npm prefix -g`.
+2. Open Windows Search.
+3. Search for: "Environment Variables"
+4. Open: "Edit the system environment variables"
+5. Click: "Environment Variables..."
+6. Under "User variables", select Path.
+7. Click Edit.
+8. Click New.
+9. Add the npm global executable directory returned by npm.
+10. Click OK through the dialogs.
+11. Close the existing terminal.
+12. Open a NEW Command Prompt or PowerShell window.
+
+**Step 3 — Verify**
+
+```bash
+coldproof --version
+```
+Expected: `0.1.6`
 
 The CLI performs the investigation locally, while the ColdProof web application stores and visualizes the resulting evidence.
 

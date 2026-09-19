@@ -251,39 +251,82 @@ export default function NewInvestigationPage() {
               </svg>
               Troubleshooting: `coldproof` command not found
             </summary>
-            <div className="mt-3 ml-1.5 pl-3 border-l border-border/60 space-y-4 text-xs text-secondary/60 leading-relaxed">
-              <p>Installed successfully, but your terminal says <code className="font-mono bg-elevated/50 px-1 rounded text-[10px]">coldproof: command not found</code>?</p>
-              <p>Your npm global executable directory may not be included in your PATH.</p>
-              
-              <div className="space-y-1.5">
-                <p className="font-medium text-secondary/80">STEP 1 &mdash; Find npm&apos;s global directory</p>
-                <CommandBlock command="npm prefix -g" muted />
-                <p className="text-[11px] text-secondary/50">This shows where npm installs global packages.</p>
+            <div className="mt-3 ml-1.5 pl-3 border-l border-border/60 space-y-5 text-xs text-secondary/60 leading-relaxed">
+              <div>
+                <p>Installed successfully, but your terminal says <code className="font-mono bg-elevated/50 px-1 rounded text-[10px]">coldproof: command not found</code> or <code className="font-mono bg-elevated/50 px-1 rounded text-[10px]">&apos;coldproof&apos; is not recognized</code>?</p>
+                <p className="mt-1">Your npm global executable directory may not be included in your PATH.</p>
               </div>
 
-              <div className="space-y-1.5">
-                <p className="font-medium text-secondary/80">STEP 2 &mdash; Add npm&apos;s global bin directory to PATH</p>
-                <div className="bg-elevated/40 border border-border/35 rounded-lg p-3 font-mono text-xs text-primary/80 overflow-x-auto whitespace-pre select-all">
-                  echo 'export PATH="$(npm prefix -g)/bin:$PATH"' &gt;&gt; ~/.zshrc<br/>
-                  source ~/.zshrc<br/>
-                  rehash
+              {/* macOS / Linux */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-primary/90 border-b border-border/30 pb-1">macOS / Linux</h3>
+                
+                <div className="space-y-1.5">
+                  <p className="font-medium text-secondary/80">Step 1 &mdash; Find npm&apos;s global directory</p>
+                  <CommandBlock command="npm prefix -g" muted />
+                  <p className="text-[11px] text-secondary/50">This shows where npm installs global packages.</p>
                 </div>
-                <p className="text-[11px] text-secondary/50">This adds npm&apos;s global executable directory to your PATH.</p>
-              </div>
 
-              <div className="space-y-1.5">
-                <p className="font-medium text-secondary/80">STEP 3 &mdash; Verify ColdProof</p>
-                <CommandBlock command="coldproof --version" muted />
-                <p className="text-[11px] text-secondary/50">Expected: 0.1.6</p>
-              </div>
-
-              <div className="border-t border-border/30 pt-3 mt-3">
-                <p className="text-[11px] text-secondary/50 mb-1.5">Using Bash instead of zsh?</p>
-                <div className="bg-elevated/40 border border-border/35 rounded-lg p-3 font-mono text-[11px] text-primary/70 overflow-x-auto whitespace-pre mb-2 select-all">
-                  echo 'export PATH="$(npm prefix -g)/bin:$PATH"' &gt;&gt; ~/.bash_profile<br/>
-                  source ~/.bash_profile
+                <div className="space-y-1.5">
+                  <p className="font-medium text-secondary/80">Step 2 &mdash; Add npm&apos;s global executable directory to your PATH</p>
+                  <div className="bg-elevated/40 border border-border/35 rounded-lg p-3 font-mono text-xs text-primary/80 overflow-x-auto whitespace-pre select-all">
+                    echo 'export PATH="$(npm prefix -g)/bin:$PATH"' &gt;&gt; ~/.zshrc<br/>
+                    source ~/.zshrc<br/>
+                    rehash
+                  </div>
+                  <p className="text-[11px] text-secondary/50">This adds npm&apos;s global executable directory to your PATH.</p>
                 </div>
-                <CommandBlock command="coldproof --version" muted />
+
+                <div className="space-y-1.5">
+                  <p className="font-medium text-secondary/80">Step 3 &mdash; Verify</p>
+                  <CommandBlock command="coldproof --version" muted />
+                  <p className="text-[11px] text-secondary/50">Expected: 0.1.6</p>
+                </div>
+
+                <div className="bg-elevated/30 border border-border/20 p-3 rounded-lg mt-3">
+                  <p className="text-[11px] text-secondary/60 font-medium mb-1.5">Using Bash instead of zsh?</p>
+                  <div className="bg-elevated/40 border border-border/35 rounded p-2.5 font-mono text-[11px] text-primary/70 overflow-x-auto whitespace-pre mb-2 select-all">
+                    echo 'export PATH="$(npm prefix -g)/bin:$PATH"' &gt;&gt; ~/.bashrc<br/>
+                    source ~/.bashrc
+                  </div>
+                  <CommandBlock command="coldproof --version" muted />
+                </div>
+              </div>
+
+              {/* Windows */}
+              <div className="space-y-3 pt-3">
+                <h3 className="font-bold text-primary/90 border-b border-border/30 pb-1">Windows</h3>
+                
+                <div className="space-y-1.5">
+                  <p className="font-medium text-secondary/80">Step 1</p>
+                  <p className="text-[11px] mb-1">Open Command Prompt or PowerShell and run:</p>
+                  <CommandBlock command="npm prefix -g" muted />
+                  <p className="text-[11px] text-secondary/50">This shows npm&apos;s global installation directory.</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="font-medium text-secondary/80">Step 2 &mdash; Add the npm global directory to your User PATH.</p>
+                  <div className="bg-elevated/20 border border-border/30 p-3 rounded-lg text-[11px] space-y-1">
+                    <p>1. Copy the directory returned by <code className="font-mono text-secondary/80">npm prefix -g</code>.</p>
+                    <p>2. Open Windows Search.</p>
+                    <p>3. Search for: &quot;Environment Variables&quot;</p>
+                    <p>4. Open: &quot;Edit the system environment variables&quot;</p>
+                    <p>5. Click: &quot;Environment Variables...&quot;</p>
+                    <p>6. Under &quot;User variables&quot;, select <strong>Path</strong>.</p>
+                    <p>7. Click <strong>Edit</strong>.</p>
+                    <p>8. Click <strong>New</strong>.</p>
+                    <p>9. Add the npm global executable directory returned by npm.</p>
+                    <p>10. Click <strong>OK</strong> through the dialogs.</p>
+                    <p>11. Close the existing terminal.</p>
+                    <p>12. Open a NEW Command Prompt or PowerShell window.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="font-medium text-secondary/80">Step 3 &mdash; Verify</p>
+                  <CommandBlock command="coldproof --version" muted />
+                  <p className="text-[11px] text-secondary/50">Expected: 0.1.6</p>
+                </div>
               </div>
             </div>
           </details>
