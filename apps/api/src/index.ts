@@ -212,7 +212,9 @@ const DEMO_INVESTIGATION_IDS: string[] = [
   'a2a0f0d4-68ce-4360-bf32-555342a393c1',
   '390751c1-5cc1-4119-b1a8-28a1e9647d63',
   'cb645205-8f8e-4626-9891-ce87d27708ed',
-  '382f4eb1-f07e-4f8d-b145-7b81f30fd0e5'
+  '382f4eb1-f07e-4f8d-b145-7b81f30fd0e5',
+  'cc53abb3-15bc-4df9-abc7-9a2122bb5b6d',
+  '3ae0031f-4ba4-490b-a140-c7527f354fc9'
 ];
 
 fastify.get('/api/demo/investigations', async (request, reply) => {
