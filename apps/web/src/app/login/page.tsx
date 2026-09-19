@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { signInWithEmailAndPassword, signInWithPopup, googleProvider } from '@/lib/firebase';
 import { auth } from '@/lib/firebase';
 
@@ -345,6 +346,16 @@ export default function LoginPage() {
                 </button>
               </form>
             )}
+
+            {/* Demo CTA */}
+            <div className="mt-6 pt-5 border-t border-border/40">
+              <Link href="/demo/investigations" className="w-full flex items-center justify-center gap-2 bg-experiment/5 hover:bg-experiment/10 text-experiment/90 hover:text-experiment border border-experiment/20 hover:border-experiment/40 font-semibold text-sm py-2.5 rounded-xl transition-all duration-150">
+                Explore Demo Investigations
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
 
             {/* Footer note */}
             <p className="text-xs text-secondary/40 text-center mt-6 leading-relaxed">

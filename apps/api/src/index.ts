@@ -207,6 +207,63 @@ fastify.get('/health', async (request, reply) => {
   return { status: 'ok' };
 });
 
+const DEMO_INVESTIGATION_IDS: string[] = [
+  '81f31619-cb56-46ff-b761-47e24429429e',
+  'a2a0f0d4-68ce-4360-bf32-555342a393c1',
+  '390751c1-5cc1-4119-b1a8-28a1e9647d63',
+  'cb645205-8f8e-4626-9891-ce87d27708ed',
+  '382f4eb1-f07e-4f8d-b145-7b81f30fd0e5'
+];
+
+fastify.get('/api/demo/investigations', async (request, reply) => {
+  const investigations = await prisma.investigation.findMany({
+    where: {
+      id: { in: DEMO_INVESTIGATION_IDS }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  // Redact private fields
+  return investigations.map(inv => ({
+    id: inv.id,
+    command: inv.command,
+    projectName: inv.projectName,
+    comparison: inv.comparison,
+    candidates: inv.candidates,
+    perturbation: inv.perturbation,
+    aiExplanation: inv.aiExplanation,
+    createdAt: inv.createdAt,
+  }));
+});
+
+fastify.get('/api/demo/investigations/:id', async (request, reply) => {
+  const { id } = request.params as { id: string };
+
+  if (!DEMO_INVESTIGATION_IDS.includes(id)) {
+    return reply.status(404).send({ error: 'Demo investigation not found or not allowlisted' });
+  }
+
+  const inv = await prisma.investigation.findUnique({
+    where: { id }
+  });
+
+  if (!inv) {
+    return reply.status(404).send({ error: 'Demo investigation not found' });
+  }
+
+  // Redact private fields
+  return {
+    id: inv.id,
+    command: inv.command,
+    projectName: inv.projectName,
+    comparison: inv.comparison,
+    candidates: inv.candidates,
+    perturbation: inv.perturbation,
+    aiExplanation: inv.aiExplanation,
+    createdAt: inv.createdAt,
+  };
+});
+
 // ------------------------------------------------------------------
 // PROTECTED ENDPOINTS
 // ------------------------------------------------------------------

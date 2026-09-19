@@ -199,10 +199,8 @@ export default function DashboardPage() {
   // Only set up the IntersectionObserver once auth has resolved and the
   // .reveal elements are actually mounted. Passing `ready` as a dep means
   // the effect re-runs after the auth guard lifts.
-  const ready = !loading && !!user;
+  const ready = !loading;
   useScrollReveal(ready);
-
-  useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
   // Show a minimal skeleton while Firebase auth initialises so the page
   // is never a blank white/dark void. The skeleton matches the navbar height
@@ -217,10 +215,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // Unauthenticated — redirect fires via useEffect above; render nothing while
-  // it runs so there is no flash of dashboard content for logged-out users.
-  if (!user) return null;
 
   return (
     <div className="w-full">
@@ -272,19 +266,20 @@ export default function DashboardPage() {
 
               {/* CTAs */}
               <div className="flex items-center gap-3 flex-wrap animate-slide-up" style={{ animationDelay: '480ms' }}>
-                <Link href="/investigations/new"
+                <Link href="/demo/investigations"
                   className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-[0_0_0_rgba(110,156,203,0)] hover:shadow-[0_4px_20px_-4px_rgba(110,156,203,0.4)] hover:-translate-y-0.5 active:translate-y-0">
-                  <svg className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                  Explore Demo Investigations
+                  <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
                   </svg>
+                </Link>
+                <Link href={user ? "/investigations/new" : "/login"}
+                  className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
                   New Investigation
                 </Link>
-                <Link href="/investigations"
+                <Link href={user ? "/investigations" : "/login"}
                   className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
                   View Investigations
-                  <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
                 </Link>
               </div>
             </div>
@@ -648,14 +643,14 @@ export default function DashboardPage() {
               Run ColdProof against any command that behaves differently across environments.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Link href="/investigations/new"
+              <Link href={user ? "/investigations/new" : "/login"}
                 className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-[0_0_0_rgba(110,156,203,0)] hover:shadow-[0_4px_20px_-4px_rgba(110,156,203,0.4)] hover:-translate-y-0.5 active:translate-y-0">
                 <svg className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
                 </svg>
                 New Investigation
               </Link>
-              <Link href="/investigations"
+              <Link href={user ? "/investigations" : "/login"}
                 className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
                 View Evidence Archive
                 <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
