@@ -100,6 +100,42 @@ After installation, verify it with:
 coldproof --help
 ```
 
+### Troubleshooting: `coldproof` command not found
+
+Installed successfully, but your terminal says `coldproof: command not found`?
+Your npm global executable directory may not be included in your PATH.
+
+**STEP 1 — Find npm's global directory**
+
+```bash
+npm prefix -g
+```
+*(This shows where npm installs global packages.)*
+
+**STEP 2 — Add npm's global bin directory to PATH**
+
+For macOS using zsh:
+```bash
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+rehash
+```
+*(This adds npm's global executable directory to your PATH.)*
+
+**STEP 3 — Verify ColdProof**
+
+```bash
+coldproof --version
+```
+Expected: `0.1.6`
+
+*Using Bash instead of zsh?*
+```bash
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+coldproof --version
+```
+
 The CLI performs the investigation locally, while the ColdProof web application stores and visualizes the resulting evidence.
 
 > **Current CLI version:** `0.1.6`
