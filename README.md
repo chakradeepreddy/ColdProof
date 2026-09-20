@@ -6,6 +6,20 @@ ColdProof is an execution-based environment causality debugger. It solves the "w
 
 Website Url : https://cold-proof-web-two.vercel.app
 
+Screenshots : 
+
+<img width="1440" height="812" alt="Screenshot 2026-09-20 at 2 17 12 PM" src="https://github.com/user-attachments/assets/49438092-654d-4edf-9eed-7b1980084371" />
+<img width="1440" height="810" alt="Screenshot 2026-09-20 at 2 17 32 PM" src="https://github.com/user-attachments/assets/ce6b03fe-54ec-4914-b1e6-28bc55bdd08e" />
+<img width="1440" height="813" alt="Screenshot 2026-09-20 at 2 18 03 PM" src="https://github.com/user-attachments/assets/af1fbd53-27e7-42d8-a4d1-d6e25d9bfaaf" />
+<img width="1440" height="811" alt="Screenshot 2026-09-20 at 2 23 59 PM" src="https://github.com/user-attachments/assets/1e5a06f3-76e2-42e5-b4b2-8bfb389bf566" />
+<img width="1440" height="811" alt="Screenshot 2026-09-20 at 2 16 53 PM" src="https://github.com/user-attachments/assets/efdf9d9b-a493-4e10-bb2d-8c6eb336e78c" />
+<img width="1440" height="812" alt="Screenshot 2026-09-20 at 2 19 41 PM" src="https://github.com/user-attachments/assets/e22e461b-3f79-4207-a31d-ad1b1f8650bb" />
+<img width="1440" height="813" alt="Screenshot 2026-09-20 at 2 19 14 PM" src="https://github.com/user-attachments/assets/b89c44ef-970e-4cb6-95e7-f85e2be5aca0" />
+<img width="1440" height="812" alt="Screenshot 2026-09-20 at 2 19 03 PM" src="https://github.com/user-attachments/assets/9ec70bab-d068-45e0-b1ff-13d67057138d" />
+<img width="1440" height="810" alt="Screenshot 2026-09-20 at 2 18 48 PM" src="https://github.com/user-attachments/assets/d3c24589-16bc-4c0a-aaf9-249737c2000b" />
+<img width="1440" height="811" alt="Screenshot 2026-09-20 at 2 18 39 PM" src="https://github.com/user-attachments/assets/acb37fa5-dbd1-49e8-8784-7192d8fd1569" />
+
+
 ## What is ColdProof?
 
 When a project works correctly on a developer's machine but fails in CI or a teammate's machine, the first step is often looking at the environment differences. But the most important question is not merely finding that environments are different. The important question is: **"Which difference actually changed the result?"**
