@@ -6,18 +6,31 @@ ColdProof is an execution-based environment causality debugger. It solves the "w
 
 Website Url : https://cold-proof-web-two.vercel.app
 
-Screenshots : 
 
-<img width="1440" height="812" alt="Screenshot 2026-09-20 at 2 17 12 PM" src="https://github.com/user-attachments/assets/49438092-654d-4edf-9eed-7b1980084371" />
-<img width="1440" height="810" alt="Screenshot 2026-09-20 at 2 17 32 PM" src="https://github.com/user-attachments/assets/ce6b03fe-54ec-4914-b1e6-28bc55bdd08e" />
-<img width="1440" height="813" alt="Screenshot 2026-09-20 at 2 18 03 PM" src="https://github.com/user-attachments/assets/af1fbd53-27e7-42d8-a4d1-d6e25d9bfaaf" />
-<img width="1440" height="811" alt="Screenshot 2026-09-20 at 2 23 59 PM" src="https://github.com/user-attachments/assets/1e5a06f3-76e2-42e5-b4b2-8bfb389bf566" />
-<img width="1440" height="811" alt="Screenshot 2026-09-20 at 2 16 53 PM" src="https://github.com/user-attachments/assets/efdf9d9b-a493-4e10-bb2d-8c6eb336e78c" />
-<img width="1440" height="812" alt="Screenshot 2026-09-20 at 2 19 41 PM" src="https://github.com/user-attachments/assets/e22e461b-3f79-4207-a31d-ad1b1f8650bb" />
-<img width="1440" height="813" alt="Screenshot 2026-09-20 at 2 19 14 PM" src="https://github.com/user-attachments/assets/b89c44ef-970e-4cb6-95e7-f85e2be5aca0" />
-<img width="1440" height="812" alt="Screenshot 2026-09-20 at 2 19 03 PM" src="https://github.com/user-attachments/assets/9ec70bab-d068-45e0-b1ff-13d67057138d" />
-<img width="1440" height="810" alt="Screenshot 2026-09-20 at 2 18 48 PM" src="https://github.com/user-attachments/assets/d3c24589-16bc-4c0a-aaf9-249737c2000b" />
-<img width="1440" height="811" alt="Screenshot 2026-09-20 at 2 18 39 PM" src="https://github.com/user-attachments/assets/acb37fa5-dbd1-49e8-8784-7192d8fd1569" />
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/efdf9d9b-a493-4e10-bb2d-8c6eb336e78c" width="600"/></td>
+    <td><img src="https://github.com/user-attachments/assets/49438092-654d-4edf-9eed-7b1980084371" width="600"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/ce6b03fe-54ec-4914-b1e6-28bc55bdd08e" width="600"/></td>
+    <td><img src="https://github.com/user-attachments/assets/af1fbd53-27e7-42d8-a4d1-d6e25d9bfaaf" width="600"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/acb37fa5-dbd1-49e8-8784-7192d8fd1569" width="600"/></td>
+    <td><img src="https://github.com/user-attachments/assets/d3c24589-16bc-4c0a-aaf9-249737c2000b" width="600"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/9ec70bab-d068-45e0-b1ff-13d67057138d" width="600"/></td>
+    <td><img src="https://github.com/user-attachments/assets/b89c44ef-970e-4cb6-95e7-f85e2be5aca0" width="600"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/e22e461b-3f79-4207-a31d-ad1b1f8650bb" width="600"/></td>
+    <td><img src="https://github.com/user-attachments/assets/1e5a06f3-76e2-42e5-b4b2-8bfb389bf566" width="600"/></td>
+  </tr>
+</table>
 
 
 ## What is ColdProof?
@@ -33,6 +46,45 @@ ColdProof replaces guesswork with controlled experiments. It identifies environm
 1. **REPRODUCE:** ColdProof takes a real command from your project (e.g., your build or test script) and runs it in your normal (warm) environment, and then again in a clean containerized environment.
 2. **PERTURB:** ColdProof identifies environmental differences and performs a *perturbation*—temporarily changing one specific piece of the environment in a controlled way and re-running the exact same command.
 3. **PROVE:** By observing whether the original failure disappears or changes, ColdProof's deterministic engine produces a classification proving whether that specific environment difference is the true root cause.
+
+
+## Target Users
+
+ColdProof is designed for developers and engineering teams who regularly encounter environment-dependent failures between local development, CI, staging, and production-like environments.
+
+### Primary Users
+
+- **Software Developers** — Debug "works on my machine" failures caused by differences in runtimes, executables, environment variables, PATH configuration, local services, or project dependencies.
+- **Frontend & Full-Stack Developers** — Investigate build, typecheck, test, and development commands that behave differently across machines.
+- **Backend Developers** — Identify environment-specific failures involving runtimes, system binaries, databases, services, and other machine-level dependencies.
+- **DevOps & Platform Engineers** — Investigate environment drift between developer machines and clean/CI environments without relying only on configuration diffs.
+- **Development Teams** — Create evidence-backed explanations of environment assumptions so recurring failures can be documented and prevented.
+
+### The Problem It Solves for Them
+
+A developer may see:
+
+> "It works on my machine."
+
+ColdProof helps answer the next question:
+
+> **"Which difference between the environments actually changed the result?"**
+
+Instead of only listing differences, ColdProof reproduces the command, tests candidate environmental factors through controlled perturbation, and reports the resulting evidence.
+
+This makes environment debugging more systematic, reproducible, and easier to communicate between developers and teams.
+
+### Typical Use Cases
+
+- A build passes locally but fails in CI.
+- A typecheck command works on one machine but fails on another.
+- A system executable is available locally but missing in a clean environment.
+- Different runtime versions produce different command results.
+- A project depends on an undeclared machine-level dependency.
+- A local service or environment variable affects command execution.
+
+ColdProof is particularly useful when the goal is not simply to find **what is different**, but to experimentally determine **which difference affected the outcome**.
+
 
 ## How ColdProof Works
 
