@@ -6,6 +6,11 @@ ColdProof is an execution-based environment causality debugger. It solves the "w
 
 Website Url : https://cold-proof-web-two.vercel.app
 
+Screenshots : 
+
+![Uploading Screenshot 2026-09-20 at 2.16.53 PM.png…]()
+
+
 ## What is ColdProof?
 
 When a project works correctly on a developer's machine but fails in CI or a teammate's machine, the first step is often looking at the environment differences. But the most important question is not merely finding that environments are different. The important question is: **"Which difference actually changed the result?"**
