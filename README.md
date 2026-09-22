@@ -27,7 +27,7 @@ Website Url : https://cold-proof-web-two.vercel.app
     <td><img src="https://github.com/user-attachments/assets/d3c24589-16bc-4c0a-aaf9-249737c2000b" width="600"/></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/user-attachments/assets/9ec70bab-d068-45e0-b1ff-13d67057138d" width="600"/></td>
+    <td><img src="https://github.com/user-attachments/assets/4b006ef4-52c2-461a-9520-cc8828ad7ed1" width="600"/></td>
     <td><img src="https://github.com/user-attachments/assets/b89c44ef-970e-4cb6-95e7-f85e2be5aca0" width="600"/></td>
   </tr>
   <tr>
