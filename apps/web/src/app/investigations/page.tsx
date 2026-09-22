@@ -17,7 +17,7 @@ const EVIDENCE_MAP: Record<string, { cls: string; dot: string; label: string; bo
   STRONG_EVIDENCE:  { cls: 'bg-evidence/10 border-evidence/40 text-evidence',   dot: 'bg-evidence',    label: 'Strong evidence',  borderClass: 'evidence-border-strong' },
   PARTIAL_EVIDENCE: { cls: 'bg-evidence/10 border-evidence/30 text-evidence',   dot: 'bg-evidence/70', label: 'Partial evidence', borderClass: 'evidence-border-partial' },
   NOT_IMPLICATED:   { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/50',label: 'Not implicated',   borderClass: 'evidence-border-neutral' },
-  UNABLE_TO_TEST:   { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/40',label: 'Unable to test',   borderClass: 'evidence-border-neutral' },
+  NO_ENVIRONMENT_CAUSE_FOUND: { cls: 'bg-secondary/8 border-secondary/20 text-secondary', dot: 'bg-secondary/40',label: 'No environment cause found', borderClass: 'evidence-border-neutral' },
 };
 
 function EvidenceBadge({ classification }: { classification?: string }) {

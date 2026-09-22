@@ -198,7 +198,25 @@ Guidance:
           return 0;
         });
 
-      if (testableCandidates.length > 0) {
+      if (testableCandidates.length === 0) {
+        console.log('   No testable environment candidates found for perturbation.');
+        console.log('   Causality not established.');
+        
+        console.log(chalk.gray('\n6. Evidence\n'));
+        console.log(`   ${chalk.yellow.bold('NO_ENVIRONMENT_CAUSE_FOUND')}\n`);
+        console.log('   ✗ Unable to isolate an environmental cause.');
+        
+        console.log(chalk.gray('\n7. Conclusion\n'));
+        console.log('   The command diverges across environments, but the underlying cause');
+        console.log('   is either a missing environment variable or a dependency outside of');
+        console.log('   ColdProof’s current perturbation scope.\n');
+
+        finalPerturbationResult = {
+          evidence: {
+            classification: 'NO_ENVIRONMENT_CAUSE_FOUND'
+          }
+        };
+      } else {
         for (let i = 0; i < testableCandidates.length; i++) {
           const targetCandidate = testableCandidates[i];
           console.log(`   Candidate (${i + 1}/${testableCandidates.length}):\n   ${chalk.cyan(targetCandidate.name)}`);
@@ -237,7 +255,7 @@ Guidance:
               case 'STRONG_EVIDENCE': eIcon = chalk.green.bold('STRONG_EVIDENCE'); break;
               case 'PARTIAL_EVIDENCE': eIcon = chalk.yellow.bold('PARTIAL_EVIDENCE'); break;
               case 'NOT_IMPLICATED': eIcon = chalk.yellow.bold('NOT_IMPLICATED'); break;
-              default: eIcon = chalk.gray.bold('UNABLE_TO_TEST'); break;
+              default: eIcon = chalk.gray.bold('NO_ENVIRONMENT_CAUSE_FOUND'); break;
             }
 
             console.log(`   ${eIcon}\n`);
@@ -315,9 +333,7 @@ Guidance:
           }
           console.log('\n----------------------------------------\n');
         }
-      } else {
-        console.log('   No testable environment candidates found for perturbation.');
-        console.log('   Causality not established.');
+
       }
     } else {
       console.log(chalk.gray('\n4. Environment candidates\n'));
@@ -328,7 +344,22 @@ Guidance:
     const token = process.env.COLDPROOF_TOKEN;
     const projectId = process.env.COLDPROOF_PROJECT_ID;
 
-    if (token && projectId && comparison.behaviorChanged) {
+    if (comparison.behaviorChanged) {
+      const hasStrong = detectedCandidates.some(c => (c as any).perturbationResult?.evidence?.classification === 'CONFIRMED' || (c as any).perturbationResult?.evidence?.classification === 'STRONG_EVIDENCE');
+      const hasPartial = detectedCandidates.some(c => (c as any).perturbationResult?.evidence?.classification === 'PARTIAL_EVIDENCE');
+
+      if (!hasStrong && !hasPartial) {
+        finalPerturbationResult = {
+          evidence: {
+            classification: 'NO_ENVIRONMENT_CAUSE_FOUND'
+          }
+        };
+      } else if (!hasStrong && hasPartial) {
+        finalPerturbationResult = (detectedCandidates.find(c => (c as any).perturbationResult?.evidence?.classification === 'PARTIAL_EVIDENCE') as any).perturbationResult;
+      }
+    }
+
+    if (token && projectId) {
       console.log(chalk.gray('\n8. Telemetry\n'));
       const spinner = ora('Uploading investigation results to ColdProof Cloud...').start();
       try {

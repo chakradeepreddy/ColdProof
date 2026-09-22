@@ -36,7 +36,7 @@ const EVIDENCE_CONFIG: Record<string, {
   STRONG_EVIDENCE: { badge: 'bg-evidence/10 border-evidence/40 text-evidence', card: 'bg-evidence/5 border-evidence/30', icon: 'warn',  label: 'Strong Evidence',  accentBorder: 'border-l-evidence' },
   PARTIAL_EVIDENCE:{ badge: 'bg-evidence/10 border-evidence/30 text-evidence', card: 'bg-evidence/5 border-evidence/20', icon: 'warn',  label: 'Partial Evidence', accentBorder: 'border-l-evidence/60' },
   NOT_IMPLICATED:  { badge: 'bg-secondary/8 border-secondary/20 text-secondary', card: 'bg-surface border-border',       icon: 'info',  label: 'Not Implicated',   accentBorder: 'border-l-border' },
-  UNABLE_TO_TEST:  { badge: 'bg-secondary/8 border-secondary/20 text-secondary', card: 'bg-surface border-border',       icon: 'info',  label: 'Unable to Test',   accentBorder: 'border-l-border' },
+  NO_ENVIRONMENT_CAUSE_FOUND:  { badge: 'bg-secondary/8 border-secondary/20 text-secondary', card: 'bg-surface border-border',       icon: 'info',  label: 'No Environment Cause Found',   accentBorder: 'border-l-border' },
 };
 
 // ─── Pipeline visualization ────────────────────────────────────────
@@ -601,9 +601,9 @@ export default function InvestigationDetailPage() {
             <div className="p-5 md:p-6">
               {testedCandidates.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="font-semibold text-primary mb-1.5">No environment cause found</p>
+                  <p className="font-semibold text-primary mb-1.5">No environment cause isolated</p>
                   <p className="text-secondary text-sm max-w-md mx-auto leading-relaxed">
-                    ColdProof detected a behavioral divergence but could not identify a supported environment candidate to perturb and prove causality.
+                    ColdProof detected a behavioral divergence but could not identify a supported environment candidate to perturb. The cause is likely a missing environment variable, runtime version mismatch, or other factor outside of ColdProof's current testable scope.
                   </p>
                 </div>
               ) : (

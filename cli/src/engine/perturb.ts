@@ -94,7 +94,7 @@ export async function perturbCandidate(
     clean,
     perturbedWarm: null,
     evidence: {
-      classification: 'UNABLE_TO_TEST',
+      classification: 'NO_ENVIRONMENT_CAUSE_FOUND',
       candidateObserved: !!candidate.observed,
       candidatePerturbed: false,
       cleanFailed: clean.exitCode !== 0,
@@ -114,7 +114,7 @@ export async function perturbCandidate(
 
   try {
     let perturbedWarm: ExecutionResult;
-    let classification: PerturbationEvidence['classification'] = 'UNABLE_TO_TEST';
+    let classification: PerturbationEvidence['classification'] = 'NO_ENVIRONMENT_CAUSE_FOUND';
     let explanation = '';
     let sameExitCode = false;
     let failureOutputComparable = false;
@@ -158,7 +158,7 @@ export async function perturbCandidate(
       failureOutputComparable = analysis.failureOutputComparable;
 
       if (!cleanFailed) {
-        classification = 'UNABLE_TO_TEST';
+        classification = 'NO_ENVIRONMENT_CAUSE_FOUND';
         explanation = 'Clean environment did not fail, so we cannot perform a perturbation test.';
       } else if (!perturbedFailed) {
         classification = 'NOT_IMPLICATED';
@@ -207,7 +207,7 @@ export async function perturbCandidate(
       failureOutputComparable = analysis.failureOutputComparable;
 
       if (!cleanFailed) {
-        classification = 'UNABLE_TO_TEST';
+        classification = 'NO_ENVIRONMENT_CAUSE_FOUND';
         explanation = 'Clean environment did not fail, so we cannot match a failure signature.';
       } else if (!perturbedFailed) {
         classification = 'NOT_IMPLICATED';

@@ -50,7 +50,7 @@ export interface EnvironmentCandidate {
 }
 
 export interface PerturbationEvidence {
-  classification: 'CONFIRMED' | 'STRONG_EVIDENCE' | 'PARTIAL_EVIDENCE' | 'NOT_IMPLICATED' | 'UNABLE_TO_TEST';
+  classification: 'CONFIRMED' | 'STRONG_EVIDENCE' | 'PARTIAL_EVIDENCE' | 'NOT_IMPLICATED' | 'NO_ENVIRONMENT_CAUSE_FOUND';
   candidateObserved: boolean;
   candidatePerturbed: boolean;
   cleanFailed: boolean;
