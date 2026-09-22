@@ -206,7 +206,7 @@ The ColdProof CLI executes the experiments locally on the developer's machine.
 The ColdProof CLI is publicly published as the `coldproof` npm package, so developers can install it directly from their terminal.
 
 ```bash
-npm install -g coldproof@0.1.6
+npm install -g coldproof@0.1.7
 ```
 
 After installation, verify it with:
@@ -244,7 +244,7 @@ rehash
 ```bash
 coldproof --version
 ```
-Expected: `0.1.6`
+Expected: `0.1.7`
 
 *Using Bash instead of zsh?*
 ```bash
@@ -284,11 +284,11 @@ npm prefix -g
 ```bash
 coldproof --version
 ```
-Expected: `0.1.6`
+Expected: `0.1.7`
 
 The CLI performs the investigation locally, while the ColdProof web application stores and visualizes the resulting evidence.
 
-> **Current CLI version:** `0.1.6`
+> **Current CLI version:** `0.1.7`
 
 ### Available Commands
 

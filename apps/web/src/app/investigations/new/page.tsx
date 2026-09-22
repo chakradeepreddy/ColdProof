@@ -237,7 +237,7 @@ export default function NewInvestigationPage() {
         <div className="p-5 space-y-4">
           <div>
             <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Install</p>
-            <CommandBlock command="npm install -g coldproof@0.1.6" />
+            <CommandBlock command="npm install -g coldproof@0.1.7" />
           </div>
           <div>
             <p className="text-[10px] text-secondary/50 uppercase tracking-[0.16em] font-mono mb-2">Verify CLI is on your PATH</p>
@@ -280,7 +280,7 @@ export default function NewInvestigationPage() {
                 <div className="space-y-1.5">
                   <p className="font-medium text-secondary/80">Step 3 &mdash; Verify</p>
                   <CommandBlock command="coldproof --version" muted />
-                  <p className="text-[11px] text-secondary/50">Expected: 0.1.6</p>
+                  <p className="text-[11px] text-secondary/50">Expected: 0.1.7</p>
                 </div>
 
                 <div className="bg-elevated/30 border border-border/20 p-3 rounded-lg mt-3">
@@ -325,7 +325,7 @@ export default function NewInvestigationPage() {
                 <div className="space-y-1.5">
                   <p className="font-medium text-secondary/80">Step 3 &mdash; Verify</p>
                   <CommandBlock command="coldproof --version" muted />
-                  <p className="text-[11px] text-secondary/50">Expected: 0.1.6</p>
+                  <p className="text-[11px] text-secondary/50">Expected: 0.1.7</p>
                 </div>
               </div>
             </div>
