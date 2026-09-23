@@ -22,13 +22,13 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
   return (
     <Link
       href={href}
-      className={`relative text-xs font-semibold uppercase tracking-[0.12em] transition-colors duration-150 pb-0.5 ${
-        active ? 'text-primary' : 'text-secondary/60 hover:text-primary'
+      className={`relative text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors duration-150 pb-0.5 ${
+        active ? 'text-primary' : 'text-secondary/50 hover:text-primary'
       }`}
     >
       {label}
       {/* Active accent underline */}
-      <span className={`absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-experiment transition-all duration-200 ${
+      <span className={`absolute bottom-0 left-0 right-0 h-[1.5px] rounded-full bg-experiment transition-all duration-200 ${
         active ? 'opacity-100' : 'opacity-0'
       }`} />
     </Link>
@@ -50,36 +50,39 @@ export default function Navbar() {
   const isInvestigations = pathname.startsWith('/investigations');
 
   return (
-    <nav className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-surface/95 backdrop-blur-sm shrink-0 sticky top-0 z-10">
-      <div className="flex items-center gap-8">
-        {/* Wordmark */}
+    <nav className="flex items-center justify-between px-5 py-3 border-b border-border/60 bg-surface/90 backdrop-blur-md shrink-0 sticky top-0 z-10">
+      <div className="flex items-center gap-7">
+        {/* Wordmark + version */}
         <Link href="/" className="flex items-center gap-2 group cursor-pointer">
           <span className="text-experiment transition-all duration-200 group-hover:opacity-80 group-hover:scale-105">
-            <LogoMark size={18} />
+            <LogoMark size={17} />
           </span>
-          <span className="font-bold text-sm tracking-wide text-primary group-hover:text-primary/90 transition-colors duration-150">
+          <span className="font-bold text-[13px] tracking-wide text-primary group-hover:text-primary/90 transition-colors duration-150">
             ColdProof
+          </span>
+          <span className="text-[9px] font-mono text-secondary/25 tracking-wider select-none ml-0.5">
+            v0.1.7
           </span>
         </Link>
 
         {/* Nav links — only when authenticated */}
         {user && (
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
             <NavLink href="/" label="Dashboard" active={isDashboard} />
             <NavLink href="/investigations" label="Investigations" active={isInvestigations} />
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {user ? (
           <>
-            <span className="text-secondary text-xs hidden sm:block truncate max-w-[200px] font-mono opacity-50 select-none">
+            <span className="text-secondary text-[10px] hidden sm:block truncate max-w-[180px] font-mono opacity-40 select-none">
               {user.email}
             </span>
             <button
               onClick={handleLogout}
-              className="text-xs text-secondary/70 hover:text-primary transition-all duration-150 font-medium px-2.5 py-1.5 rounded-md hover:bg-elevated border border-transparent hover:border-border/50"
+              className="text-[11px] text-secondary/60 hover:text-primary transition-all duration-150 font-medium px-2.5 py-1.5 rounded-md hover:bg-elevated border border-transparent hover:border-border/40"
             >
               Sign out
             </button>
@@ -87,7 +90,7 @@ export default function Navbar() {
         ) : (
           <Link
             href="/login"
-            className="text-xs font-medium text-secondary hover:text-primary transition-colors duration-150"
+            className="text-[11px] font-medium text-secondary/60 hover:text-primary transition-colors duration-150"
           >
             Sign in
           </Link>

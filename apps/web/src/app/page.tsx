@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // ─── Scroll reveal ────────────────────────────────────────────────────────────
-// `ready` must be true for the observer to set up — ensures we only observe
-// after auth resolves and the .reveal elements are actually in the DOM.
 function useScrollReveal(ready: boolean) {
   useEffect(() => {
     if (!ready) return;
@@ -34,44 +32,72 @@ function LogoMark({ size = 22, className = '' }: { size?: number; className?: st
   );
 }
 
-// ─── Section label ────────────────────────────────────────────────────────────
-function SectionLabel({ step, title }: { step: string; title: string }) {
+// ─── Phase label ──────────────────────────────────────────────────────────────
+function PhaseLabel({ step, title }: { step: string; title: string }) {
   return (
-    <div className="flex items-center gap-3 mb-8">
-      <span className="text-[10px] font-mono text-secondary/35 tracking-[0.2em] uppercase select-none">{step}</span>
-      <div className="flex-1 h-px bg-border/40" />
-      <span className="text-[10px] font-mono text-secondary/35 tracking-[0.2em] uppercase select-none">{title}</span>
+    <div className="flex items-center gap-3 mb-10">
+      <span className="text-[10px] font-mono text-experiment/40 tracking-[0.2em] uppercase select-none border border-experiment/15 rounded px-2 py-0.5 bg-experiment/[0.03]">{step}</span>
+      <div className="flex-1 h-px bg-gradient-to-r from-border/60 via-border/30 to-transparent" />
+      <span className="text-[10px] font-mono text-secondary/30 tracking-[0.2em] uppercase select-none">{title}</span>
     </div>
   );
 }
 
-// ─── Pipeline stage ───────────────────────────────────────────────────────────
-function PipelineStage({
-  label, description, color, index, total,
-}: {
-  label: string; description: string;
-  color: 'experiment' | 'pass' | 'evidence';
-  index: number; total: number;
-}) {
-  const colorMap = {
-    experiment: { ring: 'bg-experiment/10 border-experiment/50', dot: 'bg-experiment', text: 'text-experiment', glow: 'shadow-[0_0_16px_rgba(110,156,203,0.15)]' },
-    pass:       { ring: 'bg-pass/10 border-pass/50',             dot: 'bg-pass',       text: 'text-pass',       glow: 'shadow-[0_0_16px_rgba(111,175,134,0.15)]' },
-    evidence:   { ring: 'bg-evidence/10 border-evidence/50',     dot: 'bg-evidence',   text: 'text-evidence',   glow: 'shadow-[0_0_16px_rgba(208,162,83,0.15)]' },
-  }[color];
+// ─── Hero diagnostic pipeline ─────────────────────────────────────────────────
+function HeroPipeline() {
+  const stages = [
+    { key: 'warm', label: 'WARM', status: '✓ PASS', statusColor: 'text-pass', borderColor: 'border-pass/30', bgColor: 'bg-pass/[0.04]', dotColor: 'bg-pass' },
+    { key: 'clean', label: 'CLEAN', status: '✗ FAIL', statusColor: 'text-fail', borderColor: 'border-fail/30', bgColor: 'bg-fail/[0.04]', dotColor: 'bg-fail' },
+    { key: 'diff', label: 'DIFF', status: '3 CANDIDATES', statusColor: 'text-secondary/60', borderColor: 'border-border/50', bgColor: 'bg-elevated/30', dotColor: 'bg-secondary/40' },
+    { key: 'perturb', label: 'PERTURB', status: 'BLOCK CANDIDATE', statusColor: 'text-experiment', borderColor: 'border-experiment/30', bgColor: 'bg-experiment/[0.04]', dotColor: 'bg-experiment' },
+    { key: 'evidence', label: 'EVIDENCE', status: 'CONFIRMED', statusColor: 'text-pass', borderColor: 'border-pass/30', bgColor: 'bg-pass/[0.04]', dotColor: 'bg-pass' },
+  ];
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Node */}
-      <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center mb-4 transition-all duration-300 hover:scale-105 ${colorMap.ring} ${colorMap.glow}`}>
-        <div className={`w-5 h-5 rounded-full ${colorMap.dot}`} />
+    <div className="w-full">
+      {/* Desktop — horizontal */}
+      <div className="hidden md:flex items-stretch justify-between gap-0 relative">
+        {/* Connector line behind everything */}
+        <div className="absolute top-[23px] left-[40px] right-[40px] h-px bg-border/40" />
+        <div className="absolute top-[23px] left-[40px] right-[40px] h-px bg-gradient-to-r from-pass/20 via-experiment/20 to-pass/20 opacity-60" />
+
+        {stages.map((stage, i) => (
+          <div key={stage.key} className="flex flex-col items-center relative z-[1] flex-1 pipeline-node-animate" style={{ animationDelay: `${800 + i * 150}ms` }}>
+            {/* Node */}
+            <div className={`w-[46px] h-[46px] rounded-full border ${stage.borderColor} ${stage.bgColor} flex items-center justify-center mb-3 transition-all duration-300 hover:scale-110`}>
+              <div className={`w-2.5 h-2.5 rounded-full ${stage.dotColor}`} />
+            </div>
+            {/* Label */}
+            <p className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-1 ${stage.statusColor}`}>{stage.label}</p>
+            {/* Status */}
+            <p className={`text-[9px] font-mono ${stage.statusColor} opacity-70`}>{stage.status}</p>
+          </div>
+        ))}
       </div>
+
+      {/* Mobile — vertical */}
+      <div className="flex md:hidden flex-col items-center gap-0">
+        {stages.map((stage, i) => (
+          <React.Fragment key={stage.key}>
+            <div className={`flex items-center gap-4 w-full max-w-[260px] px-4 py-2.5 rounded-lg border ${stage.borderColor} ${stage.bgColor}`}>
+              <div className={`w-2 h-2 rounded-full ${stage.dotColor} flex-shrink-0`} />
+              <span className={`text-xs font-bold uppercase tracking-[0.14em] ${stage.statusColor} flex-1`}>{stage.label}</span>
+              <span className={`text-[10px] font-mono ${stage.statusColor} opacity-70`}>{stage.status}</span>
+            </div>
+            {i < stages.length - 1 && (
+              <div className="flex flex-col items-center my-0.5">
+                <div className="w-px h-3 bg-border/40" />
+                <svg className="w-2 h-2 text-secondary/20 -mt-0.5" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
       {/* Label */}
-      <p className={`text-xs font-bold uppercase tracking-[0.18em] mb-2 ${colorMap.text}`}>{label}</p>
-      <p className="text-xs text-secondary/60 text-center leading-relaxed max-w-[140px]">{description}</p>
-      {/* Connector */}
-      {index < total - 1 && (
-        <div className="hidden sm:flex flex-col items-center absolute" style={{ display: 'none' }} />
-      )}
+      <p className="text-[9px] font-mono text-secondary/20 uppercase tracking-[0.25em] text-center mt-5 select-none">
+        example diagnostic trace
+      </p>
     </div>
   );
 }
@@ -169,42 +195,14 @@ function CapabilityItem({ label, detail }: { label: string; detail: string }) {
   );
 }
 
-function ScopeItem({ label, detail }: { label: string; detail: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <button onClick={() => setOpen(!open)} className="w-full text-left flex flex-col py-2.5 border-b border-border/20 last:border-0 group transition-colors hover:bg-elevated/20 px-2 -mx-2 rounded-lg">
-      <div className="flex items-start gap-3 w-full">
-        <span className="w-4 h-4 rounded-full bg-elevated border border-border/50 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors group-hover:border-border/80">
-          <span className="w-1 h-1 rounded-full bg-secondary/30" />
-        </span>
-        <div className="flex-1">
-          <p className="text-sm font-medium text-secondary/70 transition-colors group-hover:text-secondary/90">{label}</p>
-        </div>
-        <svg className={`w-4 h-4 text-secondary/30 mt-0.5 transition-transform duration-200 group-hover:text-secondary/60 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-      <div className={`overflow-hidden transition-all duration-300 ml-7 ${open ? 'max-h-32 opacity-100 mt-1.5' : 'max-h-0 opacity-0 mt-0'}`}>
-         <p className="text-xs text-secondary/45 leading-relaxed">{detail}</p>
-      </div>
-    </button>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // Only set up the IntersectionObserver once auth has resolved and the
-  // .reveal elements are actually mounted. Passing `ready` as a dep means
-  // the effect re-runs after the auth guard lifts.
   const ready = !loading;
   useScrollReveal(ready);
 
-  // Show a minimal skeleton while Firebase auth initialises so the page
-  // is never a blank white/dark void. The skeleton matches the navbar height
-  // and gives the impression of a loading state rather than a crash.
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh] animate-fade-in">
@@ -217,110 +215,74 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full scan-line">
 
       {/* ════════════════════════════════════════════════════════
-          HERO
+          HERO — Cinematic single-column composition
       ═══════════════════════════════════════════════════════════ */}
-      <section className="relative border-b border-border/40 overflow-hidden">
-        {/* Extra radial glow and vignette for hero only */}
+      <section className="relative border-b border-border/30 overflow-hidden">
+        {/* Layered background effects */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(110,156,203,0.06) 0%, transparent 75%), linear-gradient(to bottom, transparent 60%, var(--color-background) 100%)',
+          background: 'radial-gradient(ellipse 80% 70% at 50% 0%, rgba(110,156,203,0.07) 0%, transparent 75%), linear-gradient(to bottom, transparent 60%, var(--color-background) 100%)',
         }} />
 
-        <div className="max-w-5xl mx-auto px-6 py-20 md:py-28 relative">
-          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-            {/* Left — identity + copy */}
-            <div>
-              {/* Hero Logo */}
-              <div className="mb-8 inline-flex items-center justify-center relative group cursor-default animate-slide-up" style={{ animationDelay: '0ms' }}>
-                {/* Thin technical ring & halo */}
-                <div className="absolute inset-0 rounded-full border border-experiment/15 bg-experiment/[0.02] scale-150 group-hover:scale-[1.8] transition-transform duration-1000 ease-out" />
-                <div className="absolute inset-0 rounded-full bg-experiment/10 blur-xl scale-[2] opacity-40 group-hover:opacity-80 transition-opacity duration-1000" />
-                <div className="relative text-experiment animate-hero-logo transition-opacity duration-300">
-                  <LogoMark size={44} />
-                </div>
-              </div>
+        {/* Subtle grid overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }} />
 
-              {/* Headline */}
-              <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight leading-[1.05] mb-4 animate-slide-up" style={{ animationDelay: '80ms' }}>
-                ColdProof
-              </h1>
-
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-experiment/8 border border-experiment/20 rounded-full px-3 py-1 mb-7 animate-slide-up" style={{ animationDelay: '160ms' }}>
-                <span className="text-[10px] font-mono text-experiment/80 uppercase tracking-[0.2em]">Execution-based environment causality debugger</span>
-              </div>
-
-              <p className="text-base font-bold text-primary/90 tracking-widest uppercase mb-3 animate-slide-up" style={{ animationDelay: '240ms' }}>
-                DIFFERENCE ≠ CAUSE
-              </p>
-              <p className="text-lg font-semibold text-primary/90 leading-relaxed mb-8 animate-slide-up" style={{ animationDelay: '320ms' }}>
-                ColdProof does not merely list environment differences. <span className="text-experiment">It tests candidates through execution.</span>
-              </p>
-
-              {/* Problem statement */}
-              <p className="text-sm text-secondary/70 leading-relaxed mb-10 max-w-sm border-l border-border/50 pl-4 animate-slide-up" style={{ animationDelay: '400ms' }}>
-                ColdProof compares how the same command behaves in your normal environment and a clean environment, identifies environment differences associated with the failure, then experimentally perturbs candidates to determine which differences actually affect the result.
-              </p>
-
-              {/* CTAs */}
-              <div className="flex items-center gap-3 flex-wrap animate-slide-up" style={{ animationDelay: '480ms' }}>
-                <Link href="/demo/investigations"
-                  className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-[0_0_0_rgba(110,156,203,0)] hover:shadow-[0_4px_20px_-4px_rgba(110,156,203,0.4)] hover:-translate-y-0.5 active:translate-y-0">
-                  Explore Demo Investigations
-                  <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-                <Link href={user ? "/investigations/new" : "/login"}
-                  className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
-                  New Investigation
-                </Link>
-                <Link href={user ? "/investigations" : "/login"}
-                  className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
-                  View Investigations
-                </Link>
+        <div className="max-w-5xl mx-auto px-6 pt-20 pb-16 md:pt-32 md:pb-24 relative">
+          {/* Logo + Identity */}
+          <div className="flex items-center gap-3 mb-10 animate-slide-up" style={{ animationDelay: '0ms' }}>
+            <div className="relative group cursor-default inline-flex">
+              <div className="absolute inset-0 rounded-full bg-experiment/10 blur-xl scale-[2.5] opacity-30 group-hover:opacity-60 transition-opacity duration-1000" />
+              <div className="relative text-experiment animate-hero-logo">
+                <LogoMark size={36} />
               </div>
             </div>
+            <span className="text-[10px] font-mono text-experiment/40 tracking-[0.2em] uppercase border border-experiment/15 rounded px-2.5 py-0.5 bg-experiment/[0.03]">
+              Environment causality debugger
+            </span>
+          </div>
 
-            {/* Right — pipeline preview */}
-            <div className="animate-slide-up flex flex-col items-center" style={{ animationDelay: '560ms' }}>
-              <div className="w-full max-w-xs mx-auto bg-surface border border-border/50 rounded-2xl p-6 relative overflow-hidden group hover:border-experiment/30 transition-colors duration-500 hover:shadow-[0_0_30px_-5px_rgba(110,156,203,0.1)]">
-                <div className="absolute inset-0 opacity-40 group-hover:opacity-100 transition-opacity duration-500" style={{
-                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
-                  backgroundSize: '24px 24px',
-                }} />
-                <div className="relative space-y-0">
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-pass/5 border border-pass/10 group-hover:bg-pass/10 group-hover:border-pass/20 transition-colors duration-300">
-                    <span className="text-pass font-bold text-xs tracking-widest">WARM</span>
-                    <span className="text-pass/60 font-mono text-[10px] ml-auto">✓ PASS</span>
-                  </div>
-                  <div className="flex items-center justify-center py-1">
-                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 group-hover:bg-experiment/30 transition-colors duration-300" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5 group-hover:text-experiment/40 transition-colors duration-300" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-fail/5 border border-fail/10 group-hover:bg-fail/10 group-hover:border-fail/20 transition-colors duration-300">
-                    <span className="text-fail font-bold text-xs tracking-widest">CLEAN</span>
-                    <span className="text-fail/60 font-mono text-[10px] ml-auto">✗ FAIL</span>
-                  </div>
-                  <div className="flex items-center justify-center py-1">
-                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 group-hover:bg-experiment/30 transition-colors duration-300" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5 group-hover:text-experiment/40 transition-colors duration-300" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-experiment/5 border border-experiment/10 group-hover:bg-experiment/10 group-hover:border-experiment/30 transition-colors duration-300 shadow-[0_0_15px_rgba(110,156,203,0)] group-hover:shadow-[0_0_15px_rgba(110,156,203,0.1)]">
-                    <span className="text-experiment font-bold text-xs tracking-widest">PERTURB</span>
-                    <span className="text-experiment/60 font-mono text-[10px] ml-auto">PERTURB CANDIDATE</span>
-                  </div>
-                  <div className="flex items-center justify-center py-1">
-                    <div className="flex flex-col items-center"><div className="w-px h-3 bg-border/40 group-hover:bg-experiment/30 transition-colors duration-300" /><svg className="w-2 h-2 text-secondary/20 -mt-0.5 group-hover:text-experiment/40 transition-colors duration-300" fill="currentColor" viewBox="0 0 8 8"><path d="M4 6L1 2h6L4 6z" /></svg></div>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-evidence/5 border border-evidence/10 group-hover:bg-evidence/10 group-hover:border-evidence/30 transition-colors duration-300">
-                    <span className="text-evidence font-bold text-xs tracking-widest">PROVE</span>
-                    <span className="text-evidence/70 font-mono text-[10px] ml-auto">PARTIAL EVIDENCE</span>
-                  </div>
-                </div>
-                <p className="text-[9px] text-secondary/25 font-mono uppercase tracking-[0.2em] text-center mt-5">example investigation</p>
-              </div>
-            </div>
+          {/* Editorial headline */}
+          <h1 className="text-[2.75rem] md:text-[3.5rem] font-bold text-primary tracking-[-0.035em] leading-[1.05] mb-6 max-w-3xl text-balance animate-slide-up" style={{ animationDelay: '80ms' }}>
+            Don&rsquo;t just show what&rsquo;s different.<br />
+            <span className="text-experiment">Prove which difference changed the result.</span>
+          </h1>
+
+          {/* Supporting copy */}
+          <p className="text-base md:text-lg text-secondary/70 leading-relaxed max-w-xl mb-5 animate-slide-up" style={{ animationDelay: '160ms' }}>
+            ColdProof compares how the same command behaves in your environment and a clean environment, then experimentally perturbs candidates to determine which differences actually affect the result.
+          </p>
+
+          <p className="text-xs font-mono text-secondary/30 tracking-[0.2em] uppercase mb-10 animate-slide-up" style={{ animationDelay: '240ms' }}>
+            deterministic · no model inference · structured evidence classification
+          </p>
+
+          {/* CTAs */}
+          <div className="flex items-center gap-3 flex-wrap mb-16 md:mb-20 animate-slide-up" style={{ animationDelay: '320ms' }}>
+            <Link href="/demo/investigations"
+              className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-[0_0_0_rgba(110,156,203,0)] hover:shadow-[0_4px_20px_-4px_rgba(110,156,203,0.4)] hover:-translate-y-0.5 active:translate-y-0">
+              Explore Demo Investigations
+              <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <Link href={user ? "/investigations/new" : "/login"}
+              className="group inline-flex items-center gap-1.5 text-sm text-secondary/60 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
+              New Investigation
+            </Link>
+            <Link href={user ? "/investigations" : "/login"}
+              className="group inline-flex items-center gap-1.5 text-sm text-secondary/60 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
+              View Investigations
+            </Link>
+          </div>
+
+          {/* Full-width diagnostic pipeline */}
+          <div className="animate-slide-up" style={{ animationDelay: '480ms' }}>
+            <HeroPipeline />
           </div>
         </div>
       </section>
@@ -328,52 +290,81 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto px-6">
 
         {/* ════════════════════════════════════════════════════════
-            PIPELINE — REPRODUCE → PERTURB → PROVE
+            PHASE 01 — REPRODUCE → PERTURB → PROVE
         ═══════════════════════════════════════════════════════════ */}
         <section className="py-20 reveal">
-          <SectionLabel step="01" title="Core methodology" />
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Reproduce. Perturb. Prove.</h2>
-            <p className="text-secondary/70 text-sm max-w-lg mx-auto leading-relaxed">
+          <PhaseLabel step="01" title="Core methodology" />
+          <div className="text-center mb-14">
+            <h2 className="text-2xl md:text-3xl font-bold text-primary tracking-[-0.02em] mb-3 text-balance">Reproduce. Perturb. Prove.</h2>
+            <p className="text-secondary/60 text-sm max-w-lg mx-auto leading-relaxed">
               Three deterministic steps that turn an environment failure into a structured, defensible conclusion.
             </p>
           </div>
 
-          {/* Pipeline nodes */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 relative">
-            {/* Connector lines between nodes — desktop */}
-            <div className="hidden sm:block absolute top-8 left-1/3 right-1/3 h-0.5 bg-border/30" style={{ top: '32px' }} />
-
+          {/* Three-stage breakdown */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
             {[
-              { label: 'REPRODUCE', description: 'Run the same command on the warm machine and in a clean Docker environment. Confirm behavioral divergence.', color: 'experiment' as const },
-              { label: 'PERTURB', description: 'Isolate each environment candidate. Block or restore it and re-execute. One variable at a time.', color: 'evidence' as const },
-              { label: 'PROVE', description: 'Compare perturbed results to the clean failure signature. Classify what the experiment actually supports.', color: 'pass' as const },
-            ].map((stage, i) => (
-              <PipelineStage key={stage.label} {...stage} index={i} total={3} />
-            ))}
-          </div>
-
-          <div className="mt-10 text-center">
-            <p className="text-xs font-mono text-secondary/35 tracking-[0.2em] uppercase">
-              deterministic · no model inference · structured evidence classification
-            </p>
+              {
+                label: 'REPRODUCE',
+                description: 'Run the same command on the warm machine and in a clean Docker environment. Confirm behavioral divergence.',
+                color: 'experiment' as const,
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                ),
+              },
+              {
+                label: 'PERTURB',
+                description: 'Isolate each environment candidate. Block or restore it and re-execute. One variable at a time.',
+                color: 'evidence' as const,
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                ),
+              },
+              {
+                label: 'PROVE',
+                description: 'Compare perturbed results to the clean failure signature. Classify what the experiment actually supports.',
+                color: 'pass' as const,
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+              },
+            ].map((stage) => {
+              const colorMap = {
+                experiment: { border: 'border-experiment/20 hover:border-experiment/40', text: 'text-experiment', bg: 'bg-experiment/[0.04]', iconBg: 'bg-experiment/10 border-experiment/25' },
+                evidence: { border: 'border-evidence/20 hover:border-evidence/40', text: 'text-evidence', bg: 'bg-evidence/[0.04]', iconBg: 'bg-evidence/10 border-evidence/25' },
+                pass: { border: 'border-pass/20 hover:border-pass/40', text: 'text-pass', bg: 'bg-pass/[0.04]', iconBg: 'bg-pass/10 border-pass/25' },
+              }[stage.color];
+              return (
+                <div key={stage.label} className={`border rounded-xl p-6 ${colorMap.border} ${colorMap.bg} transition-all duration-300 hover:-translate-y-0.5`}>
+                  <div className={`w-10 h-10 rounded-lg border flex items-center justify-center mb-4 ${colorMap.iconBg} ${colorMap.text}`}>
+                    {stage.icon}
+                  </div>
+                  <p className={`text-xs font-bold uppercase tracking-[0.18em] mb-3 ${colorMap.text}`}>{stage.label}</p>
+                  <p className="text-sm text-secondary/60 leading-relaxed">{stage.description}</p>
+                </div>
+              );
+            })}
           </div>
         </section>
 
-        <div className="h-px bg-border/25 mb-1" />
-
         {/* ════════════════════════════════════════════════════════
-            HOW IT WORKS — TECHNICAL FLOW
+            PHASE 02 — TECHNICAL FLOW
         ═══════════════════════════════════════════════════════════ */}
         <section className="py-20 reveal">
-          <SectionLabel step="02" title="Technical flow" />
+          <PhaseLabel step="02" title="Technical flow" />
           <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">How ColdProof works</h2>
-              <p className="text-secondary/70 text-sm leading-relaxed mb-6">
+              <h2 className="text-2xl font-bold text-primary tracking-[-0.02em] mb-3">How ColdProof works</h2>
+              <p className="text-secondary/60 text-sm leading-relaxed mb-6">
                 From a failing command to a plain-English causal conclusion in one CLI invocation. No training data. No black-box model. Deterministic classification at every step.
               </p>
-              <p className="text-xs font-mono text-secondary/40 tracking-widest uppercase">
+              <p className="text-[10px] font-mono text-secondary/30 tracking-[0.2em] uppercase">
                 Run locally · Docker for isolation · Results uploaded automatically
               </p>
             </div>
@@ -395,17 +386,15 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="h-px bg-border/25 mb-1" />
-
         {/* ════════════════════════════════════════════════════════
-            ARCHITECTURE
+            PHASE 03 — ARCHITECTURE
         ═══════════════════════════════════════════════════════════ */}
         <section className="py-20 reveal">
-          <SectionLabel step="03" title="Architecture" />
+          <PhaseLabel step="03" title="Architecture" />
           <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Actual architecture</h2>
-              <p className="text-secondary/70 text-sm leading-relaxed mb-5">
+              <h2 className="text-2xl font-bold text-primary tracking-[-0.02em] mb-3">Actual architecture</h2>
+              <p className="text-secondary/60 text-sm leading-relaxed mb-5">
                 The engine runs on your machine. The web application stores and presents results. No data leaves your environment except structured investigation records.
               </p>
               <div className="bg-surface border border-experiment/15 rounded-xl p-4 text-xs text-secondary/60 leading-relaxed">
@@ -482,22 +471,18 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="h-px bg-border/25 mb-1" />
-
         {/* ════════════════════════════════════════════════════════
-            WHAT WE BUILT (MVP)
+            PHASE 04 — MVP CAPABILITIES
         ═══════════════════════════════════════════════════════════ */}
         <section className="py-20 reveal">
-          <SectionLabel step="04" title="What we built" />
+          <PhaseLabel step="04" title="What we built" />
           <div className="grid md:grid-cols-2 gap-12">
             <div>
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">MVP capabilities</h2>
-              <p className="text-secondary/70 text-sm leading-relaxed">
+              <h2 className="text-2xl font-bold text-primary tracking-[-0.02em] mb-3">MVP capabilities</h2>
+              <p className="text-secondary/60 text-sm leading-relaxed mb-4">
                 Every capability listed below is fully implemented, tested against real projects, and available in the published npm package.
               </p>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <code className="text-xs font-mono bg-[#08090A] border border-border/50 px-3 py-1.5 rounded text-primary/70">npm install -g coldproof@0.1.7</code>
-              </div>
+              <code className="text-xs font-mono bg-[#08090A] border border-border/50 px-3 py-1.5 rounded text-primary/70 inline-block">npm install -g coldproof@0.1.7</code>
             </div>
             <div className="space-y-0">
               {[
@@ -517,43 +502,34 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="h-px bg-border/25 mb-1" />
-
         {/* ════════════════════════════════════════════════════════
-            SUPPORTED ENVIRONMENTS
+            PHASE 05 — FEASIBILITY + ENVIRONMENTS
         ═══════════════════════════════════════════════════════════ */}
         <section className="py-20 reveal">
-          <SectionLabel step="05" title="Environment Support" />
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Supported Environments</h2>
-              <p className="text-secondary/70 text-sm leading-relaxed">
-                ColdProof is designed for command-line development workflows and currently supports macOS, Linux, and Windows workflows with Docker.
-              </p>
-            </div>
-            <div className="space-y-0">
-              {[
-                { label: 'macOS, Linux & Windows', detail: 'The investigation engine runs natively on macOS, Linux, and Windows host machines.' },
-                { label: 'Docker Clean Environments', detail: 'Uses standard Docker containers to provide a guaranteed clean environment for behavioral comparison.' },
-                { label: 'Command-Line Workflows', detail: 'Supports any command-line build, test, or CI process that produces an exit code and output.' },
-              ].map(item => <ScopeItem key={item.label} {...item} />)}
-            </div>
-          </div>
-        </section>
-
-        <div className="h-px bg-border/25 mb-1" />
-
-        {/* ════════════════════════════════════════════════════════
-            FEASIBILITY
-        ═══════════════════════════════════════════════════════════ */}
-        <section className="py-20 reveal">
-          <SectionLabel step="06" title="Feasibility" />
+          <PhaseLabel step="05" title="Feasibility & environments" />
           <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Why this is practical</h2>
-              <p className="text-secondary/70 text-sm leading-relaxed">
+              <h2 className="text-2xl font-bold text-primary tracking-[-0.02em] mb-3">Why this is practical</h2>
+              <p className="text-secondary/60 text-sm leading-relaxed mb-6">
                 The design is grounded in constraints that make it buildable, testable, and credible with real developer workflows.
               </p>
+
+              {/* Supported environments */}
+              <div className="bg-surface border border-border/40 rounded-xl p-5 mt-4">
+                <p className="text-[10px] font-mono text-experiment/50 uppercase tracking-[0.2em] mb-3">Supported environments</p>
+                <div className="space-y-2.5">
+                  {[
+                    'macOS, Linux & Windows',
+                    'Docker Clean Environments',
+                    'Command-Line Workflows',
+                  ].map(env => (
+                    <div key={env} className="flex items-center gap-2.5 text-sm text-secondary/70">
+                      <span className="w-1 h-1 rounded-full bg-experiment/50 flex-shrink-0" />
+                      {env}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="space-y-0">
               {[
@@ -568,17 +544,15 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="h-px bg-border/25 mb-1" />
-
         {/* ════════════════════════════════════════════════════════
-            SCALABILITY
+            PHASE 06 — SCALABILITY
         ═══════════════════════════════════════════════════════════ */}
         <section className="py-20 reveal">
-          <SectionLabel step="07" title="Scalability" />
+          <PhaseLabel step="06" title="Scalability" />
           <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-3">Realistic path forward</h2>
-              <p className="text-secondary/70 text-sm leading-relaxed mb-6">
+              <h2 className="text-2xl font-bold text-primary tracking-[-0.02em] mb-3">Realistic path forward</h2>
+              <p className="text-secondary/60 text-sm leading-relaxed mb-6">
                 The current architecture is designed for clean horizontal extension. Nothing in the MVP requires architectural replacement to scale.
               </p>
               {/* Scalability flow */}
@@ -609,7 +583,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="grid gap-3">
-              <p className="text-[10px] font-mono text-secondary/35 uppercase tracking-[0.2em] mb-1">Potential expansion areas</p>
+              <p className="text-[10px] font-mono text-secondary/30 uppercase tracking-[0.2em] mb-1">Potential expansion areas</p>
               {[
                 { title: 'More candidate types', body: 'Environment variables, mounted volumes, installed system packages, container image differences.' },
                 { title: 'Broader toolchain support', body: 'Python, Ruby, Go, Rust build tools alongside the current Node.js/npm focus.' },
@@ -621,7 +595,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary/30 flex-shrink-0" />
                     <p className="text-xs font-bold text-secondary/60 uppercase tracking-[0.1em]">{title}</p>
-                    <span className="text-[9px] font-mono text-secondary/30 ml-auto">NOT YET</span>
+                    <span className="text-[9px] font-mono text-secondary/25 ml-auto">NOT YET</span>
                   </div>
                   <p className="text-xs text-secondary/45 leading-relaxed">{body}</p>
                 </div>
@@ -631,17 +605,24 @@ export default function DashboardPage() {
         </section>
 
         {/* ════════════════════════════════════════════════════════
-            FOOTER CTA
+            FOOTER CTA — Terminal-style
         ═══════════════════════════════════════════════════════════ */}
-        <section className="py-16 border-t border-border/25 reveal">
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-5 rounded-full border border-experiment/25 bg-experiment/5 flex items-center justify-center">
-              <LogoMark size={20} className="text-experiment/70" />
+        <section className="py-16 border-t border-border/20 reveal">
+          <div className="max-w-lg mx-auto text-center">
+            <div className="w-10 h-10 mx-auto mb-5 rounded-full border border-experiment/20 bg-experiment/[0.04] flex items-center justify-center">
+              <LogoMark size={18} className="text-experiment/70" />
             </div>
-            <h2 className="text-xl font-bold text-primary mb-2 tracking-tight">Ready to investigate?</h2>
-            <p className="text-secondary/60 text-sm mb-7 max-w-xs mx-auto leading-relaxed">
+            <h2 className="text-xl font-bold text-primary mb-2 tracking-[-0.02em]">Ready to investigate?</h2>
+            <p className="text-secondary/50 text-sm mb-4 leading-relaxed">
               Run ColdProof against any command that behaves differently across environments.
             </p>
+
+            {/* Terminal-style install block */}
+            <div className="bg-[#08090A] border border-border/50 rounded-lg px-4 py-3 font-mono text-sm text-primary/70 mb-7 text-left inline-flex items-center gap-2 mx-auto">
+              <span className="text-secondary/30 select-none">$</span>
+              <span>npm install -g coldproof@0.1.7</span>
+            </div>
+
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Link href={user ? "/investigations/new" : "/login"}
                 className="group inline-flex items-center gap-2 bg-experiment hover:bg-experiment/90 text-[#0B0D0F] px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-[0_0_0_rgba(110,156,203,0)] hover:shadow-[0_4px_20px_-4px_rgba(110,156,203,0.4)] hover:-translate-y-0.5 active:translate-y-0">
@@ -651,7 +632,7 @@ export default function DashboardPage() {
                 New Investigation
               </Link>
               <Link href={user ? "/investigations" : "/login"}
-                className="group inline-flex items-center gap-1.5 text-sm text-secondary/70 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
+                className="group inline-flex items-center gap-1.5 text-sm text-secondary/60 hover:text-primary font-medium px-4 py-2.5 rounded-lg border border-border/50 hover:border-experiment/30 bg-elevated/30 hover:bg-experiment/5 transition-all duration-300">
                 View Evidence Archive
                 <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />

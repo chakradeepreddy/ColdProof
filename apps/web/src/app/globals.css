@@ -44,10 +44,10 @@
       /* Layer 3: Radial blue illumination around hero (top center) */
       radial-gradient(ellipse 80% 50% at 50% -10%, rgba(110, 156, 203, 0.07) 0%, transparent 70%),
       /* Layer 2: Larger diagnostic coordinate markers */
-      radial-gradient(circle, rgba(110, 156, 203, 0.15) 2px, transparent 2px),
+      radial-gradient(circle, rgba(110, 156, 203, 0.18) 1.5px, transparent 1.5px),
       /* Layer 1 & 0: Staggered tiny hex dot field (blue-gray) */
-      radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px),
-      radial-gradient(circle, rgba(110, 156, 203, 0.08) 1.5px, transparent 1.5px);
+      radial-gradient(circle, rgba(110, 156, 203, 0.08) 1px, transparent 1px),
+      radial-gradient(circle, rgba(110, 156, 203, 0.08) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 144px 252px, 48px 84px, 48px 84px;
     background-position: center, center, 72px 126px, 0 0, 24px 42px;
     background-attachment: fixed;
@@ -73,6 +73,21 @@
   .hover-glow-evidence:hover {
     box-shadow: 0 0 20px -5px rgba(208, 162, 83, 0.2);
     border-color: rgba(208, 162, 83, 0.3);
+  }
+
+  /* ─── Technical label utility ──────────────────────────────────────── */
+  .technical-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: color-mix(in oklch, var(--color-secondary) 45%, transparent);
+  }
+
+  /* ─── Text balance for editorial headlines ─────────────────────────── */
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
@@ -159,6 +174,57 @@
 .evidence-border-partial     { border-left: 2px solid color-mix(in oklch, var(--color-evidence) 70%, transparent); }
 .evidence-border-neutral     { border-left: 2px solid var(--color-border); }
 
+/* ─── Scan line — subtle ambient diagnostic animation ───────────── */
+@keyframes scan-line {
+  0%   { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
+}
+
+.scan-line::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(110,156,203,0.06) 20%,
+    rgba(110,156,203,0.12) 50%,
+    rgba(110,156,203,0.06) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: scan-line 12s linear infinite;
+}
+
+/* ─── Hero diagnostic pipeline animations ────────────────────────── */
+@keyframes pipeline-trace {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes pipeline-node-enter {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pipeline-label-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pipeline-trace-animate {
+  animation: pipeline-trace 600ms var(--ease-snap) both;
+}
+.pipeline-node-animate {
+  animation: pipeline-node-enter 350ms var(--ease-snap) both;
+}
+.pipeline-label-animate {
+  animation: pipeline-label-enter 280ms var(--ease-snap) both;
+}
+
 /* ─── Reduced motion ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
@@ -170,12 +236,19 @@
   .animate-pulse-node,
   .skeleton-shimmer,
   .animate-hero-logo,
-  .animate-connector {
+  .animate-connector,
+  .pipeline-trace-animate,
+  .pipeline-node-animate,
+  .pipeline-label-animate {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
     background: var(--color-elevated) !important;
+  }
+  .scan-line::after {
+    animation: none !important;
+    display: none;
   }
 }
 

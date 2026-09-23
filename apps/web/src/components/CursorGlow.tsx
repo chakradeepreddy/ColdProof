@@ -28,12 +28,12 @@ export default function CursorGlow() {
       cursorX += (mouseX - cursorX) * 0.15;
       cursorY += (mouseY - cursorY) * 0.15;
 
-      const scale = isHovering ? 0.65 : 1;
-      const opacity = isVisible ? (isHovering ? 0.8 : 0.35) : 0;
+      const scale = isHovering ? 0.6 : 1;
+      const opacity = isVisible ? (isHovering ? 0.7 : 0.3) : 0;
       // When hovering, intensify the glow
       const dropShadow = isHovering 
-        ? 'drop-shadow(0 0 6px rgba(110,156,203,0.7))' 
-        : 'drop-shadow(0 0 2px rgba(110,156,203,0.3))';
+        ? 'drop-shadow(0 0 4px rgba(110,156,203,0.5))' 
+        : 'drop-shadow(0 0 1px rgba(110,156,203,0.2))';
 
       el.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%) scale(${scale})`;
       el.style.opacity = opacity.toString();
@@ -78,23 +78,35 @@ export default function CursorGlow() {
       style={{ opacity: 0, willChange: 'transform, opacity, filter' }}
     >
       <svg
-        width="28"
-        height="28"
-        viewBox="0 0 24 24"
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="text-experiment"
       >
-        {/* Hexagon frame */}
+        {/* Crosshair lines — calibration instrument feel */}
+        <line x1="16" y1="0" x2="16" y2="11" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.4" />
+        <line x1="16" y1="21" x2="16" y2="32" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.4" />
+        <line x1="0" y1="16" x2="11" y2="16" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.4" />
+        <line x1="21" y1="16" x2="32" y2="16" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.4" />
+
+        {/* Hexagon frame — slightly smaller within the crosshair */}
         <path
-          d="M12 2L21 7V17L12 22L3 17V7L12 2Z"
+          d="M16 6L23 10.5V21.5L16 26L9 21.5V10.5L16 6Z"
           stroke="currentColor"
-          strokeWidth="1.2"
+          strokeWidth="0.8"
           strokeLinejoin="round"
-          strokeOpacity="0.8"
+          strokeOpacity="0.6"
         />
         {/* Center dot — the proof point */}
-        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+        <circle cx="16" cy="16" r="1.2" fill="currentColor" fillOpacity="0.8" />
+
+        {/* Tiny tick marks on crosshairs */}
+        <line x1="14.5" y1="4" x2="17.5" y2="4" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
+        <line x1="14.5" y1="28" x2="17.5" y2="28" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
+        <line x1="4" y1="14.5" x2="4" y2="17.5" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
+        <line x1="28" y1="14.5" x2="28" y2="17.5" stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.25" />
       </svg>
     </div>
   );
